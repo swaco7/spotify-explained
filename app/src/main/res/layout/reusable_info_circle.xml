@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="url"
+            type="String" />
+        <variable
+            name="artistName"
+            type="String" />
+        <variable
+            name="sourceTrack"
+            type="com.example.spotifyexplained.model.TrackAudioFeatures" />
+
+    </data>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/source_artist_image_feature"
+        circleImageUrl="@{url}"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="5dp"
+        android:background="?attr/selectableItemBackgroundBorderless" />
+
+    <TextView
+        android:id="@+id/source_artist_name_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/source_artist_image_feature"
+        android:layout_centerHorizontal="true"
+        android:textSize="14sp"
+        android:textAlignment="center"
+        android:text="@{artistName}" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/source_artist_name_text"
+        android:layout_centerHorizontal="true"
+        android:textSize="12sp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:textStyle="bold"
+        android:textAlignment="center"
+        android:visibility="@{sourceTrack == null ? View.GONE : View.VISIBLE}"
+        android:text="@{sourceTrack != null ? sourceTrack.track.trackName : artistName}" />
+
+    </RelativeLayout>
+
+</layout>

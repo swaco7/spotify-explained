@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout>
+    <data>
+        <variable
+            name="track"
+            type="com.example.spotifyexplained.model.Track" />
+        <variable
+            name="genre"
+            type="String" />
+        <variable
+            name="clickHandler"
+            type="com.example.spotifyexplained.general.TrackDetailClickHandler"/>
+    </data>
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="@{() -> clickHandler.onTrackClick(track)}"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="6dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:strokeColor="?android:textColorSecondary"
+            app:strokeWidth="1dp"
+            android:layout_margin="2dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{genre}"
+                android:textSize="14sp"
+                android:textColor="?android:textColorSecondary"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp">
+            </TextView>
+        </com.google.android.material.card.MaterialCardView>
+    </RelativeLayout>
+</layout>

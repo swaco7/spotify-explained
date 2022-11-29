@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_home">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.example.spotifyexplained.ui.home.HomeFragment"
+        android:label="@string/title_home"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_navigation_home_to_fragment_custom_recommend"
+            app:destination="@id/navigation_custom_recommend" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_top_songs"
+            app:destination="@id/navigation_top_songs" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_recommended_songs"
+            app:destination="@id/navigation_recommended_songs" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_playlist"
+            app:destination="@id/navigation_playlist" />
+        <action
+            android:id="@+id/action_navigation_home_to_track_detail"
+            app:destination="@id/fragment_recommend_track_detail_page" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_custom_recommend"
+        android:name="com.example.spotifyexplained.ui.recommend.custom.base.CustomRecommendBaseFragment"
+        android:label="@string/custom_recommend"
+        tools:layout="@layout/fragment_recommend_base">
+        <action
+            android:id="@+id/action_navigation_custom_recommend_to_fragment_recommend_track_detail_page"
+            app:destination="@id/fragment_recommend_track_detail_page" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_top_songs"
+        android:name="com.example.spotifyexplained.ui.topItems.TopItemsFragment"
+        android:label="@string/top"
+        tools:layout="@layout/fragment_top_items" >
+        <action
+            android:id="@+id/action_navigation_top_songs_to_fragment_recommend_track_detail_page"
+            app:destination="@id/fragment_recommend_track_detail_page" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_recommended_songs"
+        android:name="com.example.spotifyexplained.ui.recommend.spotify.RecommendFragment"
+        android:label="@string/spotify_recommend"
+        tools:layout="@layout/fragment_recommend">
+        <action
+            android:id="@+id/action_navigation_recommended_songs_to_fragment_recommend_track_detail_page"
+            app:destination="@id/fragment_recommend_track_detail_page" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_recommend_track_detail_page"
+        android:name="com.example.spotifyexplained.ui.detail.TrackDetailPageFragment"
+        android:label="@string/track_detail_page"
+        tools:layout="@layout/fragment_recommend_track_detail_page">
+        <argument
+            android:name="track"
+            app:argType="string"/>
+        <action
+            android:id="@+id/action_navigation_track_detail_to_fragment_recommend_track_detail_page"
+            app:destination="@id/fragment_recommend_track_detail_page" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_playlist"
+        android:name="com.example.spotifyexplained.ui.playlist.PlaylistFragment"
+        android:label="Playlist"
+        tools:layout="@layout/fragment_playlist" />
+</navigation>

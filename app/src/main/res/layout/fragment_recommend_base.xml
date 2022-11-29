@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+    <data>
+        <import type="com.example.spotifyexplained.model.LoadingState"/>
+        <import type="android.view.View" />
+        <variable
+            name="viewModel"
+            type="com.example.spotifyexplained.ui.recommend.custom.base.CustomRecommendBaseViewModel"/>
+        <variable
+            name="poolLoading"
+            type="Boolean"/>
+    </data>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
+    tools:context=".ui.recommend.custom.base.CustomRecommendBaseFragment">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/my_toolbar"
+        style="@style/Widget.MaterialComponents.Toolbar.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/top_bar_size"
+        android:background="@color/purple_700"
+        android:elevation="4dp"
+        app:title="@string/recommend_custom_title"
+        app:titleCentered="true"
+        app:navigationIcon="@{viewModel.expanded ? @drawable/baseline_expand_less_24 : @drawable/baseline_expand_more_24}"
+        app:navigationIconTint="@color/white"
+        app:titleTextAppearance="@style/TextAppearance.AppCompat.Medium"
+        app:titleTextColor="@color/white">
+
+        <ImageView
+            android:id="@+id/menu_button"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="end"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="5dp"
+            android:src="@drawable/info_48px"
+            android:onClick="@{() -> viewModel.infoClicked()}"
+            app:tint="@color/white" />
+
+    </com.google.android.material.appbar.MaterialToolbar>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/topBar"
+        android:orientation="horizontal"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:layout_below="@+id/my_toolbar"
+        android:visibility="@{viewModel.expanded ? View.VISIBLE : View.GONE}">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="0.15"
+            android:layout_height="match_parent"
+            android:textAlignment="center"
+            android:text="">
+        </TextView>
+
+        <ProgressBar
+            android:id="@+id/loadingBar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:scaleY="3"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="0.6"
+            android:progress="@{viewModel.loadingProgress}">
+        </ProgressBar>
+
+        <ImageView
+            android:id="@+id/reload_button"
+            android:layout_width="0dp"
+            android:layout_height="24dp"
+            android:layout_weight="0.15"
+            android:visibility="@{poolLoading ? View.INVISIBLE : View.VISIBLE}"
+            android:src="@{@drawable/baseline_download_24}">
+        </ImageView>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_below="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="@{(viewModel.loadingState == LoadingState.LOADING) ? View.VISIBLE : View.GONE}">
+
+        <include layout="@layout/reusable_loading_line"
+            app:phase="@{viewModel.phase}"
+            app:name="@{`Download pool of artists`}"
+            app:targetPhase="@{1}"
+            >
+        </include>
+        <include layout="@layout/reusable_loading_line"
+            app:phase="@{viewModel.phase}"
+            app:name="@{`Download top tracks for artists`}"
+            app:targetPhase="@{2}">
+        </include>
+        <include layout="@layout/reusable_loading_line"
+            app:phase="@{viewModel.phase}"
+            app:name="@{`Download audio features for tracks`}"
+            app:targetPhase="@{3}"
+           >
+        </include>
+        <include layout="@layout/reusable_loading_line"
+            app:phase="@{viewModel.phase}"
+            app:name="@{`Save to database`}"
+            app:targetPhase="@{4}"
+            >
+        </include>
+    </LinearLayout>
+
+    <com.google.android.material.tabs.TabLayout
+        android:layout_below="@id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:tabTextAppearance="@style/MineCustomTabText"
+        android:id="@+id/top_tab"
+        android:visibility="@{(viewModel.loadingState == LoadingState.LOADING || viewModel.loadingState == LoadingState.FAILURE || !viewModel.tabVisible) ? View.GONE : View.VISIBLE}"
+        >
+    </com.google.android.material.tabs.TabLayout>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/top_tab"
+        android:visibility="@{(viewModel.loadingState == LoadingState.LOADING || viewModel.loadingState == LoadingState.FAILURE) ? View.GONE : View.VISIBLE}"
+        />
+
+<!--    <ProgressBar-->
+<!--        android:id="@+id/progressBar"-->
+<!--        style="?android:attr/progressBarStyle"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_below="@id/topBar"-->
+<!--        android:visibility="@{viewModel.loadingState == LoadingState.LOADING ? View.VISIBLE : View.GONE}" />-->
+
+</RelativeLayout>
+    </layout>

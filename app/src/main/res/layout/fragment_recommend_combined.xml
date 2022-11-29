@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <import type="com.example.spotifyexplained.model.VisualState"/>
+        <import type="com.example.spotifyexplained.model.LoadingState"/>
+        <import type="com.example.spotifyexplained.model.ZoomType"/>
+        <import type="com.example.spotifyexplained.model.DetailVisibleType"/>
+        <import type="android.view.View" />
+        <import type="com.example.spotifyexplained.ui.recommend.spotify.combined.CombinedRecommendViewModel" />
+        <variable
+            name="viewModel"
+            type="com.example.spotifyexplained.ui.recommend.spotify.combined.CombinedRecommendViewModel" />
+        <variable
+            name="trackClickHandler"
+            type="com.example.spotifyexplained.general.TrackDetailClickHandler"/>
+        <variable
+            name="graphClickHandler"
+            type="com.example.spotifyexplained.general.GraphClickHandler"/>
+        <variable
+            name="zoomType"
+            type="com.example.spotifyexplained.model.ZoomType" />
+        <variable
+            name="itemSelected"
+            type="Boolean"/>
+        <variable
+            name="settings"
+            type="com.example.spotifyexplained.model.GraphSettings" />
+    </data>
+    <RelativeLayout
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/mainLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".ui.recommend.spotify.combined.CombinedRecommendFragment">
+
+        <RelativeLayout
+            android:id="@+id/button_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="20dp">
+
+            <ImageView
+                android:id="@+id/search_button"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="5dp"
+                android:src="@drawable/search_48px" />
+
+            <LinearLayout
+                android:id="@+id/buttons_switch"
+                android:layout_width="wrap_content"
+                android:orientation="horizontal"
+                android:layout_centerHorizontal="true"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/settings_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@{viewModel.visualState == VisualState.SETTINGS ? @drawable/rounded_button_selected :  @drawable/rounded_button_unselected}"
+                    android:text="@string/settings"
+                    android:paddingTop="@{viewModel.visualState == VisualState.SETTINGS ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                    android:paddingBottom="@{viewModel.visualState == VisualState.SETTINGS ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                    android:paddingStart="@{viewModel.visualState == VisualState.SETTINGS ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                    android:paddingEnd="@{viewModel.visualState == VisualState.SETTINGS ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                    android:textColor="@{viewModel.visualState == VisualState.SETTINGS ? @color/white : @color/black}"
+                    android:onClick="@{() -> viewModel.onSettingsClick()}"/>
+
+                <TextView
+                    android:id="@+id/table_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@{viewModel.visualState == VisualState.TABLE ? @drawable/rounded_button_selected :  @drawable/rounded_button_unselected}"
+                    android:text="@string/list"
+                    android:paddingTop="@{viewModel.visualState == VisualState.TABLE ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                    android:paddingBottom="@{viewModel.visualState == VisualState.TABLE ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                    android:paddingStart="@{viewModel.visualState == VisualState.TABLE ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                    android:paddingEnd="@{viewModel.visualState == VisualState.TABLE ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                    android:textColor="@{viewModel.visualState == VisualState.TABLE ? @color/white : @color/black}"
+                    android:onClick="@{() -> viewModel.onListClick()}"/>
+                <TextView
+                    android:id="@+id/graph_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@{viewModel.visualState == VisualState.GRAPH ? @drawable/rounded_button_selected :  @drawable/rounded_button_unselected}"
+                    android:text="@string/graph"
+                    android:paddingTop="@{viewModel.visualState == VisualState.GRAPH ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                    android:paddingBottom="@{viewModel.visualState == VisualState.GRAPH ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                    android:paddingStart="@{viewModel.visualState == VisualState.GRAPH ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                    android:paddingEnd="@{viewModel.visualState == VisualState.GRAPH ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                    android:textColor="@{viewModel.visualState == VisualState.GRAPH ? @color/white : @color/black}"
+                    android:onClick="@{() -> viewModel.onGraphClick()}"/>
+            </LinearLayout>
+
+            <RelativeLayout
+                android:id="@+id/reload_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:visibility="@{itemSelected ? View.VISIBLE : View.GONE}">
+
+                <ImageView
+                    android:id="@+id/reload_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:src="@drawable/baseline_refresh_24" />
+                <TextView
+                    android:id="@+id/reload_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/reload_button"
+                    android:textSize="11sp"
+                    android:text="@string/reload"
+                    android:layout_centerHorizontal="true"/>
+            </RelativeLayout>
+        </RelativeLayout>
+        
+        <androidx.appcompat.widget.SearchView
+            android:id="@+id/search_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:theme="@style/SearchViewText"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_below="@id/button_layout"
+            android:visibility="gone"
+            app:queryHint="Search here">
+        </androidx.appcompat.widget.SearchView>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_margin="1dp"
+            android:background="@color/light_gray"
+            />
+
+        <include layout="@layout/reusable_item_info_layout"
+            app:detailVisibleType="@{viewModel.detailVisibleType}"
+            app:detailViewVisible="@{viewModel.detailViewVisible}"
+            app:isTrack="@{viewModel.isTrack}"
+            app:imageUrl="@{viewModel.imageUrl}"
+            app:artistName="@{viewModel.artistName}"
+            app:selectedTrack="@{viewModel.selectedTrack}"
+            app:trackClickHandler="@{trackClickHandler}" />
+
+        <include layout="@layout/reusable_bundle_info_layout"
+            app:detailVisibleType="@{viewModel.detailVisibleType}"
+            app:detailViewVisible="@{viewModel.detailViewVisible}"
+            app:graphClickHandler="@{graphClickHandler}" />
+
+        <include layout="@layout/reusable_line_info_layout"
+            app:detailVisibleType="@{viewModel.detailVisibleType}"
+            app:detailViewVisible="@{viewModel.detailViewVisible}"
+            app:lineInfo="@{viewModel.lineInfo}"
+            app:graphClickHandler="@{graphClickHandler}"/>
+
+        <include layout="@layout/reusable_line_genre_info_layout"
+            app:detailVisibleType="@{viewModel.detailVisibleType}"
+            app:detailViewVisible="@{viewModel.detailViewVisible}"
+            app:lineGenreInfo="@{viewModel.lineGenreInfo}"
+            app:graphClickHandler="@{graphClickHandler}"/>
+
+        <include layout="@layout/reusable_line_feature_info_layout"
+            app:detailVisibleType="@{viewModel.detailVisibleType}"
+            app:detailViewVisible="@{viewModel.detailViewVisible}"
+            app:lineFeaturesInfo="@{viewModel.lineFeaturesInfo}"
+            app:graphClickHandler="@{graphClickHandler}"/>
+
+        <include layout="@layout/reusable_line_bundle_info_layout"
+            app:detailVisibleType="@{viewModel.detailVisibleType}"
+            app:detailViewVisible="@{viewModel.detailViewVisible}"
+            app:graphClickHandler="@{graphClickHandler}"/>
+
+        <ProgressBar
+            android:id="@+id/progressBarGraph"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_height="wrap_content"
+            android:visibility="@{viewModel.visualState == VisualState.GRAPH &amp;&amp; viewModel.graphLoadingState == LoadingState.LOADING ? View.VISIBLE : View.GONE}"/>
+
+        <com.cruxlab.sectionedrecyclerview.lib.SectionHeaderLayout
+            android:id="@+id/section_header_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/search_view"
+            android:visibility="@{viewModel.visualState == VisualState.SETTINGS ? View.VISIBLE : View.GONE}">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/settings_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="@{viewModel.visualState == VisualState.SETTINGS ? View.VISIBLE : View.GONE}"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                android:layout_marginBottom="60dp"
+                />
+
+        </com.cruxlab.sectionedrecyclerview.lib.SectionHeaderLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recommend_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/button_layout"
+            android:layout_marginBottom="60dp"
+            android:visibility="@{viewModel.visualState == VisualState.TABLE ? View.VISIBLE : View.GONE}"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <WebView
+            android:id="@+id/web_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/button_layout"
+            android:visibility='@{viewModel.visualState == VisualState.GRAPH &amp;&amp; viewModel.graphLoadingState == LoadingState.GRAPH_LOADED ? View.VISIBLE : View.GONE}' />
+
+        <include layout="@layout/reusable_graph_buttons_layout"
+            android:layout_below="@+id/button_layout"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            app:graphClickHandler="@{graphClickHandler}"
+            app:visualState="@{viewModel.visualState}"
+            app:zoomType="@{viewModel.zoomType}"
+            app:settings="@{viewModel.settings}"/>
+
+        <include layout="@layout/reusable_spotify_recommend_layout"
+            app:detailVisibleType="@{viewModel.detailVisibleType}"
+            app:detailViewVisible="@{viewModel.detailViewVisible}"
+            app:graphClickHandler="@{graphClickHandler}"/>
+    </RelativeLayout>
+</layout>

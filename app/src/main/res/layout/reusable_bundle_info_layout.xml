@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <import type="com.example.spotifyexplained.model.DetailVisibleType"/>
+        <import type="android.view.View" />
+        <variable
+            name="detailVisibleType"
+            type="com.example.spotifyexplained.model.DetailVisibleType" />
+        <variable
+            name="detailViewVisible"
+            type="Boolean" />
+        <variable
+            name="adapter"
+            type="com.example.spotifyexplained.adapter.BundleAdapter" />
+        <variable
+            name="graphClickHandler"
+            type="com.example.spotifyexplained.general.GraphClickHandler"/>
+
+    </data>
+
+    <androidx.cardview.widget.CardView
+        android:visibility="@{detailViewVisible &amp;&amp; detailVisibleType == DetailVisibleType.BUNDLE ? View.VISIBLE : View.GONE}"
+        android:id="@+id/bundleCardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardElevation="5dp">
+        <RelativeLayout
+            android:id="@+id/bundleTracksLayout"
+            android:layout_width="match_parent"
+            android:paddingTop="5dp"
+            android:layout_height="wrap_content">
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="3dp"
+                android:id="@+id/header_layout">
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/close_bundle"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="5dp"
+                    android:onClick="@{() -> graphClickHandler.onCloseBundleClick()}"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/close" />
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:padding="2dp"
+                    android:text="@string/this_bundle_contains">
+                </TextView>
+            </RelativeLayout>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/bundleTracksList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:layout_below="@+id/header_layout"
+                adapter="@{adapter}"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+</layout>

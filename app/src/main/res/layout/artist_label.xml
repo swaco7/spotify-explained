@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout>
+    <data>
+        <variable
+            name="artist"
+            type="com.example.spotifyexplained.model.Artist"/>
+    </data>
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="6dp"
+            app:cardBackgroundColor="@color/gray"
+            android:layout_margin="2dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{artist.artistName}"
+                android:textSize="14sp"
+                android:textColor="@color/white"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp">
+            </TextView>
+        </androidx.cardview.widget.CardView>
+    </RelativeLayout>
+</layout>

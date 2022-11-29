@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <import type="android.view.View" />
+        <import type="com.example.spotifyexplained.model.BundleLineInfo" />
+        <variable
+            name="bundleLineInfo"
+            type="com.example.spotifyexplained.model.BundleLineInfo" />
+    </data>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="3dp"
+        android:orientation="horizontal"
+        android:id="@+id/source_to_target_layout_genre">
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_weight="0.25"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/sourceArtistGenre">
+
+            <include layout="@layout/reusable_info_circle"
+                app:url="@{bundleLineInfo.sourceTrack.track.album.albumImages[0].url}"
+                app:artistName="@{bundleLineInfo.sourceArtist.artistName}"
+                app:sourceTrack="@{bundleLineInfo.sourceTrack}">
+            </include>
+        </RelativeLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="0.4"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical">
+            <include layout="@layout/genre_color_row"
+                app:genreName="@{bundleLineInfo.genres}"
+                app:color="@{bundleLineInfo.genreColor}">
+            </include>
+        </LinearLayout>
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_weight="0.25"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/targetArtistGenre">
+
+            <include layout="@layout/reusable_info_circle"
+                app:url="@{bundleLineInfo.targetTrack.track.album.albumImages[0].url}"
+                app:artistName="@{bundleLineInfo.targetArtist.artistName}"
+                app:sourceTrack="@{bundleLineInfo.targetTrack}">
+            </include>
+
+        </RelativeLayout>
+    </LinearLayout>
+</layout>

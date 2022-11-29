@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable
+            name="name"
+            type="String" />
+        <variable
+            name="selected"
+            type="Boolean" />
+    </data>
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/selection_indicator_image"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_margin="5dp"
+        android:layout_centerVertical="true"
+        android:src="@{selected ? @drawable/check_box_48px : @drawable/check_box_outline_blank_48px}"
+        />
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_centerVertical="true"
+        android:layout_toEndOf="@id/selection_indicator_image"
+        android:text="@{name}"
+        android:textSize="14sp" />
+
+</RelativeLayout>
+</layout>

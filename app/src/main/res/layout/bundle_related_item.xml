@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="bundleLineInfo"
+            type="com.example.spotifyexplained.model.BundleLineInfo" />
+    </data>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="3dp"
+        android:orientation="horizontal"
+        android:id="@+id/source_to_target_layout">
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_weight="0.25"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/sourceArtist">
+
+            <include layout="@layout/reusable_info_circle"
+                app:url="@{bundleLineInfo.sourceTrack.track.album.albumImages[0].url}"
+                app:artistName="@{bundleLineInfo.sourceArtist.artistName}"
+                app:sourceTrack="@{bundleLineInfo.sourceTrack}">
+            </include>
+        </RelativeLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="0.4"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text='@{"#" + bundleLineInfo.sToT + " in related artists"}'
+                android:textAlignment="center"
+                android:visibility="@{bundleLineInfo.sToT != null ? View.VISIBLE : View.GONE}"
+                >
+            </TextView>
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/arrow_right_48px"
+                android:visibility="@{bundleLineInfo.sToT != null ? View.VISIBLE : View.GONE}">
+            </ImageView>
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/arrow_back_48px"
+                android:visibility="@{bundleLineInfo.tToS != null ? View.VISIBLE : View.GONE}">
+            </ImageView>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text='@{"#" + bundleLineInfo.tToS + " in related artists"}'
+                android:textAlignment="center"
+                android:visibility="@{bundleLineInfo.tToS != null ? View.VISIBLE : View.GONE}"
+                >
+            </TextView>
+        </LinearLayout>
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_weight="0.25"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/targetArtist">
+
+            <include layout="@layout/reusable_info_circle"
+                app:url="@{bundleLineInfo.targetTrack.track.album.albumImages[0].url}"
+                app:artistName="@{bundleLineInfo.targetArtist.artistName}"
+                app:sourceTrack="@{bundleLineInfo.targetTrack}">
+            </include>
+        </RelativeLayout>
+    </LinearLayout>
+</layout>

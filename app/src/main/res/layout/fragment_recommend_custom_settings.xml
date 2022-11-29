@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <import type="com.example.spotifyexplained.model.VisualState"/>
+        <import type="com.example.spotifyexplained.model.LoadingState"/>
+        <import type="com.example.spotifyexplained.model.ZoomType"/>
+        <import type="com.example.spotifyexplained.model.DetailVisibleType"/>
+        <import type="com.example.spotifyexplained.model.AudioFeatures"/>
+        <import type="com.example.spotifyexplained.ui.recommend.custom.settings.CustomRecommendSettingsViewModel"/>
+        <import type="android.view.View" />
+        <variable
+            name="trackClickHandler"
+            type="com.example.spotifyexplained.general.TrackDetailClickHandler"/>
+        <variable
+            name="graphClickHandler"
+            type="com.example.spotifyexplained.general.GraphClickHandler"/>
+        <variable
+            name="expanded"
+            type="Boolean"/>
+        <variable
+            name="zoomType"
+            type="com.example.spotifyexplained.model.ZoomType" />
+        <variable
+            name="features_values"
+            type="com.example.spotifyexplained.model.AudioFeatures"/>
+        <variable
+            name="userTracksCount"
+            type="Integer"/>
+        <variable
+            name="viewModel"
+            type="com.example.spotifyexplained.ui.recommend.custom.settings.CustomRecommendSettingsViewModel"/>
+    </data>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".ui.recommend.custom.settings.CustomRecommendSettingsFragment">
+
+        <RelativeLayout
+            android:id="@+id/button_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="20dp">
+
+            <ImageView
+                android:id="@+id/expandButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:onClick="@{() -> viewModel.onTabExpandClick(viewModel.tabVisible)}"
+                android:src="@{viewModel.tabVisible ? @drawable/baseline_expand_less_24 : @drawable/baseline_expand_more_24}">
+            </ImageView>
+
+            <LinearLayout
+                android:id="@+id/buttons_switch"
+                android:layout_width="wrap_content"
+                android:orientation="horizontal"
+                android:layout_centerHorizontal="true"
+                android:layout_height="wrap_content">
+
+
+                <TextView
+                    android:id="@+id/table_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@{viewModel.visualState == VisualState.TABLE ? @drawable/rounded_button_selected :  @drawable/rounded_button_unselected}"
+                    android:text="@string/list"
+                    android:animateLayoutChanges="true"
+                    android:paddingTop="@{viewModel.visualState == VisualState.TABLE ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                    android:paddingBottom="@{viewModel.visualState == VisualState.TABLE ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                    android:paddingStart="@{viewModel.visualState == VisualState.TABLE ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                    android:paddingEnd="@{viewModel.visualState == VisualState.TABLE ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                    android:textColor="@{viewModel.visualState == VisualState.TABLE ? @color/white : @color/black}"
+                    android:onClick="@{() -> viewModel.onListClick()}"/>
+                <TextView
+                    android:id="@+id/graph_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:animateLayoutChanges="true"
+                    android:background="@{viewModel.visualState == VisualState.GRAPH ? @drawable/rounded_button_selected :  @drawable/rounded_button_unselected}"
+                    android:text="@string/graph"
+                    android:paddingTop="@{viewModel.visualState == VisualState.GRAPH ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                    android:paddingBottom="@{viewModel.visualState == VisualState.GRAPH ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                    android:paddingStart="@{viewModel.visualState == VisualState.GRAPH ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                    android:paddingEnd="@{viewModel.visualState == VisualState.GRAPH ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                    android:textColor="@{viewModel.visualState == VisualState.GRAPH ? @color/white : @color/black}"
+                    android:onClick="@{() -> viewModel.onGraphClick()}"/>
+
+                <TextView
+                    android:id="@+id/settings_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:animateLayoutChanges="true"
+                    android:background="@{viewModel.visualState == VisualState.SETTINGS ? @drawable/rounded_button_selected :  @drawable/rounded_button_unselected}"
+                    android:text="@string/settings"
+                    android:paddingTop="@{viewModel.visualState == VisualState.SETTINGS ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                    android:paddingBottom="@{viewModel.visualState == VisualState.SETTINGS ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                    android:paddingStart="@{viewModel.visualState == VisualState.SETTINGS ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                    android:paddingEnd="@{viewModel.visualState == VisualState.SETTINGS ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                    android:textColor="@{viewModel.visualState == VisualState.SETTINGS ? @color/white : @color/black}"
+                    android:onClick="@{() -> viewModel.onSettingsClick()}"/>
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/reload_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/baseline_refresh_24">
+            </ImageView>
+        </RelativeLayout>
+
+        <include layout="@layout/reusable_item_info_layout"
+            app:detailVisibleType="@{viewModel.detailVisibleType}"
+            app:detailViewVisible="@{viewModel.detailViewVisible}"
+            app:isTrack="@{viewModel.isTrack}"
+            app:imageUrl="@{viewModel.imageUrl}"
+            app:artistName="@{viewModel.artistName}"
+            app:selectedTrack="@{viewModel.selectedTrack}"
+            app:trackClickHandler="@{trackClickHandler}" />
+
+        <include layout="@layout/reusable_bundle_info_layout"
+            app:detailVisibleType="@{viewModel.detailVisibleType}"
+            app:detailViewVisible="@{viewModel.detailViewVisible}"
+            app:graphClickHandler="@{graphClickHandler}" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/button_layout"
+            android:background="@color/white"
+            android:visibility='@{viewModel.visualState == VisualState.GRAPH &amp;&amp; viewModel.loadingState != LoadingState.GRAPH_LOADED ? View.VISIBLE : View.GONE}'>
+        </View>
+
+        <ProgressBar
+            android:id="@+id/progressBarGraph"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_height="wrap_content"
+            android:visibility="@{viewModel.visualState == VisualState.GRAPH &amp;&amp; viewModel.graphLoadingState == LoadingState.LOADING ? View.VISIBLE : View.GONE}"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recommend_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/button_layout"
+            android:layout_marginBottom="60dp"
+            android:visibility="@{viewModel.visualState == VisualState.TABLE ? View.VISIBLE : View.GONE}"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <WebView
+            android:id="@+id/web_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/button_layout"
+            android:visibility='@{viewModel.visualState == VisualState.GRAPH &amp;&amp; viewModel.graphLoadingState == LoadingState.GRAPH_LOADED ? View.VISIBLE : View.GONE}' />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:clickable="true"
+            android:layout_margin="8dp"
+            android:layout_below="@id/button_layout"
+            app:rippleColor="@color/purple_700"
+            android:background="?attr/selectableItemBackground"
+            android:onClick="@{() -> zoomType == ZoomType.BASIC ? graphClickHandler.onResponsiveZoomClick() : graphClickHandler.onBasicZoomClick()}"
+            android:visibility="@{viewModel.visualState == VisualState.GRAPH ? View.VISIBLE : View.GONE}">
+
+            <ImageView
+                android:id="@+id/icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="?attr/selectableItemBackground"
+                android:src="@{zoomType == ZoomType.BASIC ? @drawable/zoom_responsive_48px : @drawable/zoom_normal_48px}">
+            </ImageView>
+        </RelativeLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/settings_layout"
+            android:layout_below="@id/button_layout"
+            android:layout_marginBottom="60dp"
+            android:visibility="@{viewModel.visualState == VisualState.SETTINGS ? View.VISIBLE : View.GONE}">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/audio_features"
+                    android:textStyle="bold"
+                    android:padding="@dimen/section_header_padding"
+                    android:layout_centerVertical="true"
+                    android:textSize="@dimen/section_header_size"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="20dp">
+                </TextView>
+
+                <ImageView
+                    android:id="@+id/menu_button"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginTop="20dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="20dp"
+                    android:src="@drawable/info_48px"
+                    android:onClick="@{() -> viewModel.infoClicked()}"
+                    app:tint="@color/white" />
+
+            </RelativeLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/features_list"
+                android:layout_width="match_parent"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                android:layout_height="wrap_content">
+            </androidx.recyclerview.widget.RecyclerView>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_margin="1dp"
+                android:background="@color/gray"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/general"
+                android:textStyle="bold"
+                android:padding="5dp"
+                android:textSize="20sp"
+                android:layout_margin="10dp">
+            </TextView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.3"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="15dp"
+                    android:textSize="13sp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:text="TRACK COUNT">
+                </TextView>
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/slider_0"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:valueFrom="1.0"
+                android:valueTo="@{Math.max(10, userTracksCount)}"
+                android:value="10.0"
+                android:stepSize="1"
+                textViewLabel="@{sliderValue}"
+                onValueChangeListener="@{(value) -> viewModel.setTracksCount(value)}"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="0.5">
+            </com.google.android.material.slider.Slider>
+
+            <TextView
+                android:id="@+id/slider_value"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.1"
+                android:text="10.0"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="20dp">
+            </TextView>
+            </LinearLayout>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Use Popularity"
+                android:checked="@={viewModel.popularityCheck}"
+                android:layout_marginStart="20dp">
+            </CheckBox>
+
+        </LinearLayout>
+        </ScrollView>
+    </RelativeLayout>
+</layout>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+    <data>
+        <import type="com.example.spotifyexplained.model.AudioFeatures"/>
+        <import type="com.example.spotifyexplained.ui.recommend.custom.settings.CustomRecommendSettingsViewModel"/>
+        <variable
+            name="feature_name"
+            type="String"/>
+        <variable
+            name="feature_index"
+            type="Integer"/>
+        <variable
+            name="viewModel"
+            type="com.example.spotifyexplained.ui.recommend.custom.settings.CustomRecommendSettingsViewModel"/>
+    </data>
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="horizontal" android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp">
+
+            <TextView
+                android:id="@+id/layout_0"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.4"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="12dp"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="@{feature_name.toUpperCase()}">
+            </TextView>
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/slider_0"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:value="1"
+                textViewLabel="@{sliderValue}"
+                onValueChangeListener="@{(value) -> viewModel.setFeatureValue(feature_index, value)}"
+                android:stepSize="0.1"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="0.5">
+            </com.google.android.material.slider.Slider>
+
+            <TextView
+                android:id="@+id/slider_value"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.08"
+                android:text="1.0"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="20dp">
+            </TextView>
+
+        </LinearLayout>
+</layout>

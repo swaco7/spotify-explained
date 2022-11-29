@@ -1,0 +1,93 @@
+<resources>
+    <string name="app_name">Spotify \n Explained</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="base_get_token_url">https://accounts.spotify.com/</string>
+    <string name="saved">Saved</string>
+    <string name="recommended">Recommend</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="top">Top</string>
+    <string name="related">Related</string>
+    <string name="audio_features">Audio Features</string>
+    <string name="general">General</string>
+    <string name="top_genres">Top Genres</string>
+    <string name="view_all">View all</string>
+    <string name="hide">Hide</string>
+    <string name="top_features">Top Features</string>
+    <string name="most_popular">Most Popular</string>
+    <string name="least_popular">Least popular</string>
+    <string name="custom_recommend">Custom Recommend</string>
+    <string name="spotify_recommend">Spotify Recommend</string>
+    <string name="track_detail_page">TrackDetailPage</string>
+    <string name="by_tracks">By tracks</string>
+    <string name="by_artists">By artists</string>
+    <string name="by_genres">By genres</string>
+    <string name="list">List</string>
+    <string name="graph">Graph</string>
+    <string name="overallTab">Overall</string>
+    <string name="mostSimilarTab">Specific</string>
+    <string name="customTab">Custom</string>
+    <string name="loadingPoolStopped">Stopped</string>
+    <string name="settings">Settings</string>
+    <string name="logout">Logout</string>
+    <string name="reload">Reload</string>
+    <string name="sync">Sync</string>
+    <string name="clear_caches">Clear caches</string>
+    <string name="playlist">Playlist</string>
+    <string name="delete">Delete</string>
+    <string name="this_list_is_empty">This list is empty</string>
+    <string name="detail">Go to detail</string>
+    <string name="command_feedback">"'%1$s' command successful!"</string>
+    <string name="err_generic_toast">An error has occurred. Check the logs to know more.</string>
+    <string name="on_demand_feedback">Can play on demand? %1$b</string>
+    <string name="add_to_library">Add to library</string>
+    <string name="remove_from_library">Remove from library</string>
+    <string name="this_bundle_contains">This bundle contains:</string>
+    <string name="select">Select</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_playlist_question">Delete playlist?</string>
+    <string name="delete_track_question">Delete this track?</string>
+    <string name="playlist_no_pool_message">There are no tracks in pool, please download the track pool first</string>
+    <string name="playlist_created">"Playlist '%1$s' created"</string>
+    <string name="combined">Combined</string>
+    <string name="topTracksTabTitle">Top tracks</string>
+    <string name="topArtistsTabTitle">Top artists</string>
+    <string name="saveTracksTabTitle">Saved tracks</string>
+    <string name="create">Create</string>
+    <string name="track_removed_message">Track removed from the library</string>
+    <string name="track_added_message">Track added to the library</string>
+    <string name="recommend_custom_title">Our recommends</string>
+    <string name="top_items_title">Your Music</string>
+    <string name="spotify_recommend_title">Spotify Recommends</string>
+    <string name="track_detail_title">Track Detail</string>
+    <string name="playlist_title">Playlist</string>
+    <string name="placeholder_text">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean et est a dui semper facilisis. Pellentesque placerat elit a nunc. Nullam tortor odio, rutrum quis, egestas ut, posuere sed, felis. Vestibulum placerat feugiat nisl. Suspendisse lacinia, odio non feugiat vestibulum, sem erat blandit metus, ac nonummy magna odio pharetra felis. Vivamus vehicula velit non metus faucibus auctor.</string>
+    <string name="take_me_there">Take me there</string>
+    <string name="home_our_recommend_content">Our recommender system is based on similarity of audio feature values such as Acousticness, Tempo etc. of tracks to user\'s favourite music</string>
+    <string name="home_your_music_content">Contains your favourite tracks and artist visualized</string>
+    <string name="home_spotify_recommend_content">Displays output of powerful Spotify recommender system. System is able to recommend based on various seeds that can be customized.</string>
+    <string name="home_playlist_creation">You can create custom playlist based on your current taste in an interactive tool and save it to your Spotify.</string>
+    <string name="custom_recommend_info_text">This is our custom recommender system. \n\n
+                Firstly the pool of candidate tracks is collected based on user\'s music (relations between artists and top tracks for the artist are utilized), subsequently \"best\" based on the audio features are selected. \n\n
+                Overall - candidates are ranked based on comparison with all user\'s tracks \n\n
+                Specific- candidates are ranked based on comparison with the small number af most similar to that track \n\n
+                Custom - weight of each audio feature as well as the number of tracks relevant for comparison can be customized</string>
+    <string name="top_info_text">Contains: \n\n
+        Top Tracks - user\'s top tracks calculated by Spotify \n\n
+        Top Artists - user\'s top artists calculated by Spotify \n\n
+        Saved tracks - tracks saved by user in Spotify library \n\n
+    </string>
+    <string name="spotify_recommend_info_text">Recommendations by Spotify based on various types of seeds: \n\n
+        By Tracks - top 5 tracks are taken as seeds \n\n
+        By Artists - top 5 artists are taken as seeds \n\n
+        By Genres - top 5 genres are calculated from user\'s music \n\n
+        Combined - user can select seeds from tracks, artists, genres in any combination \n\n
+    </string>
+    <string name="playlist_info_text">Playlist creation tool. \n\n
+        Application offers tracks based on user\'s music and realtime feedback (positive, neutral or negative). \n\n
+        User can save created playlist to Spotify app.
+    </string>
+    <string name="settings_features_info_text">Set weight for each audio feature type.\nWeight set to 0 means that audio feature is not taken into consideration for selection of the tracks</string>
+</resources>

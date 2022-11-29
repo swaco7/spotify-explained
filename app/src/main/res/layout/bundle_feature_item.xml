@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="bundleLineInfo"
+            type="com.example.spotifyexplained.model.BundleLineInfo" />
+        <variable
+            name="value"
+            type="String" />
+    </data>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="3dp"
+        android:orientation="horizontal"
+        android:id="@+id/source_to_target_layout_feature">
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_weight="0.25"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/sourceArtistFeature">
+
+            <include layout="@layout/reusable_info_circle"
+                app:url="@{bundleLineInfo.sourceTrack.track.album.albumImages[0].url}"
+                app:artistName="@{bundleLineInfo.sourceArtist.artistName}"
+                app:sourceTrack="@{bundleLineInfo.sourceTrack}">
+            </include>
+
+<!--            <de.hdodenhof.circleimageview.CircleImageView-->
+<!--                android:id="@+id/source_artist_image_feature"-->
+<!--                circleImageUrl="@{bundleLineInfo.sourceTrack.track.album.albumImages[0].url}"-->
+<!--                android:layout_width="48dp"-->
+<!--                android:layout_height="48dp"-->
+<!--                android:layout_centerHorizontal="true"-->
+<!--                android:layout_marginStart="5dp"-->
+<!--                android:background="?attr/selectableItemBackgroundBorderless" />-->
+
+<!--            <TextView-->
+<!--                android:id="@+id/source_artist_name_text"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_below="@+id/source_artist_image_feature"-->
+<!--                android:layout_centerHorizontal="true"-->
+<!--                android:padding="2dp"-->
+<!--                android:textAlignment="center"-->
+<!--                android:text="@{bundleLineInfo.sourceArtist.artistName}" />-->
+
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_below="@+id/source_artist_name_text"-->
+<!--                android:layout_centerHorizontal="true"-->
+<!--                android:padding="2dp"-->
+<!--                android:textAlignment="center"-->
+<!--                android:visibility="@{bundleLineInfo.sourceTrack == null ? View.GONE : View.VISIBLE}"-->
+<!--                android:text="@{bundleLineInfo.sourceTrack != null ? bundleLineInfo.sourceTrack.track.trackName : bundleLineInfo.sourceArtist.artistName}" />-->
+
+        </RelativeLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="0.4"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical">
+            <include layout="@layout/feature_info_row"
+                app:name="@{bundleLineInfo.features.first.name()}"
+                app:value="@{value}">
+            </include>
+        </LinearLayout>
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_weight="0.25"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/targetArtistFeature">
+
+            <include layout="@layout/reusable_info_circle"
+                app:url="@{bundleLineInfo.targetTrack.track.album.albumImages[0].url}"
+                app:artistName="@{bundleLineInfo.targetArtist.artistName}"
+                app:sourceTrack="@{bundleLineInfo.targetTrack}">
+            </include>
+
+<!--            <de.hdodenhof.circleimageview.CircleImageView-->
+<!--                android:id="@+id/target_artist_image_feature"-->
+<!--                android:layout_width="48dp"-->
+<!--                android:layout_height="48dp"-->
+<!--                android:layout_centerHorizontal="true"-->
+<!--                android:layout_marginStart="5dp"-->
+<!--                android:background="?attr/selectableItemBackgroundBorderless"-->
+<!--                circleImageUrl="@{bundleLineInfo.targetTrack.track.album.albumImages[0].url}" />-->
+<!--            <TextView-->
+<!--                android:id="@+id/source_artist_name_feature"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:padding="2dp"-->
+<!--                android:textAlignment="center"-->
+<!--                android:layout_centerHorizontal="true"-->
+<!--                android:layout_below="@+id/target_artist_image_feature"-->
+<!--                android:text="@{bundleLineInfo.targetArtist.artistName}">-->
+<!--            </TextView>-->
+
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_below="@+id/source_artist_name_feature"-->
+<!--                android:layout_centerHorizontal="true"-->
+<!--                android:padding="2dp"-->
+<!--                android:textAlignment="center"-->
+<!--                android:visibility="@{bundleLineInfo.targetTrack == null ? View.GONE : View.VISIBLE}"-->
+<!--                android:text="@{bundleLineInfo.targetTrack != null ? bundleLineInfo.targetTrack.track.trackName : bundleLineInfo.targetArtist.artistName}" />-->
+
+        </RelativeLayout>
+    </LinearLayout>
+</layout>

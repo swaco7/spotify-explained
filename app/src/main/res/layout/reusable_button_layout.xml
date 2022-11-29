@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <import type="com.example.spotifyexplained.model.VisualState"/>
+        <import type="android.view.View" />
+        <variable
+            name="visualState"
+            type="com.example.spotifyexplained.model.VisualState" />
+        <variable
+            name="tabClickHandler"
+            type="com.example.spotifyexplained.general.VisualTabClickHandler" />
+
+    </data>
+
+    <RelativeLayout
+        android:id="@+id/button_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp">
+
+        <LinearLayout
+            android:id="@+id/buttons_switch"
+            android:layout_width="wrap_content"
+            android:orientation="horizontal"
+            android:layout_centerHorizontal="true"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/table_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@{visualState == VisualState.TABLE ? @drawable/rounded_button_selected :  @drawable/rounded_button_unselected}"
+                android:text="@string/list"
+                android:animateLayoutChanges="true"
+                android:paddingTop="@{visualState == VisualState.TABLE ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                android:paddingBottom="@{visualState == VisualState.TABLE ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                android:paddingStart="@{visualState == VisualState.TABLE ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                android:paddingEnd="@{visualState == VisualState.TABLE ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                android:textColor="@{visualState == VisualState.TABLE ? @color/white : @color/black}"
+                android:onClick="@{() -> tabClickHandler.onListClick()}"/>
+            <TextView
+                android:id="@+id/graph_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:animateLayoutChanges="true"
+                android:background="@{visualState == VisualState.GRAPH ? @drawable/rounded_button_selected :  @drawable/rounded_button_unselected}"
+                android:text="@string/graph"
+                android:paddingTop="@{visualState == VisualState.GRAPH ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                android:paddingBottom="@{visualState == VisualState.GRAPH ? @dimen/selected_vertical_padding : @dimen/unselected_vertical_padding}"
+                android:paddingStart="@{visualState == VisualState.GRAPH ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                android:paddingEnd="@{visualState == VisualState.GRAPH ? @dimen/selected_horizontal_padding : @dimen/unselected_horizontal_padding}"
+                android:textColor="@{visualState == VisualState.GRAPH ? @color/white : @color/black}"
+                android:onClick="@{() ->tabClickHandler.onGraphClick()}"/>
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/reload_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:clickable="true"
+            android:background="?attr/selectableItemBackground"
+            android:layout_alignParentEnd="true">
+
+            <ImageView
+                android:id="@+id/reload_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/baseline_refresh_24" />
+            <TextView
+                android:id="@+id/reload_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/reload_button"
+                android:textSize="11sp"
+                android:text="@string/reload"
+                android:layout_centerHorizontal="true"/>
+        </RelativeLayout>
+    </RelativeLayout>
+</layout>

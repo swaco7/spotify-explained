@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+    <data>
+        <import type="java.util.ArrayList" />
+        <variable
+            name="genreName"
+            type="String"/>
+        <variable
+            name="color"
+            type="ArrayList&lt;Float&gt;"/>
+    </data>
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="horizontal" android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginStart="20dp"
+            android:layout_gravity="center_vertical"
+            circleSrc="@{color}"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="0.6"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:layout_margin="2dp"
+            android:layout_gravity="center_vertical"
+            android:text="@{genreName}" />
+
+    </LinearLayout>
+</layout>

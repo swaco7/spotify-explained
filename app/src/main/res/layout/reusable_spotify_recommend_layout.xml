@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <import type="com.example.spotifyexplained.model.DetailVisibleType"/>
+        <import type="android.view.View" />
+        <variable
+            name="detailVisibleType"
+            type="com.example.spotifyexplained.model.DetailVisibleType" />
+        <variable
+            name="detailViewVisible"
+            type="Boolean" />
+        <variable
+            name="graphClickHandler"
+            type="com.example.spotifyexplained.general.GraphClickHandler"/>
+    </data>
+
+        <androidx.cardview.widget.CardView
+            android:visibility="@{detailViewVisible &amp;&amp; detailVisibleType == DetailVisibleType.INFO ? View.VISIBLE : View.GONE}"
+            android:id="@+id/info_card_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardElevation="5dp">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="60dp">
+                <LinearLayout
+                    android:id="@+id/info_layout"
+                    android:layout_width="match_parent"
+                    android:paddingTop="5dp"
+                    android:orientation="vertical"
+                    android:layout_height="wrap_content">
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="3dp"
+                        android:id="@+id/header_info_layout">
+
+                        <androidx.appcompat.widget.AppCompatImageButton
+                            android:id="@+id/close_info"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_centerVertical="true"
+                            android:layout_marginStart="5dp"
+                            android:onClick="@{() -> graphClickHandler.onCloseBundleClick()}"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/close" />
+
+                        <TextView
+                            android:id="@+id/info_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:padding="2dp"
+                            android:text="Graph legend"/>
+                    </RelativeLayout>
+
+                    <include layout="@layout/graph_info_layout"/>
+                </LinearLayout>
+            </ScrollView>
+        </androidx.cardview.widget.CardView>
+</layout>

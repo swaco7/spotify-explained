@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <import type="com.example.spotifyexplained.model.DetailVisibleType"/>
+        <import type="android.view.View" />
+        <variable
+            name="detailVisibleType"
+            type="com.example.spotifyexplained.model.DetailVisibleType" />
+        <variable
+            name="detailViewVisible"
+            type="Boolean" />
+        <variable
+            name="lineGenreInfo"
+            type="com.example.spotifyexplained.model.LineDetailGenreInfo" />
+        <variable
+            name="graphClickHandler"
+            type="com.example.spotifyexplained.general.GraphClickHandler"/>
+
+    </data>
+
+    <androidx.cardview.widget.CardView
+        android:visibility="@{detailViewVisible &amp;&amp; detailVisibleType == DetailVisibleType.LINEGENRE ? View.VISIBLE : View.GONE}"
+        android:id="@+id/lineCardViewGenre"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardElevation="5dp">
+        <RelativeLayout
+            android:id="@+id/lineDetailGenreLayout"
+            android:layout_width="match_parent"
+            android:paddingTop="5dp"
+            android:layout_height="wrap_content">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="3dp"
+                android:id="@+id/header_layout">
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/close_bundle"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="5dp"
+                    android:onClick="@{() -> graphClickHandler.onCloseBundleClick()}"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/close" />
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:padding="2dp"
+                    android:text="@string/this_bundle_contains">
+                </TextView>
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="3dp"
+                android:layout_below="@id/header_layout"
+                android:orientation="horizontal"
+                android:id="@+id/source_to_target_layout_genre">
+                <RelativeLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="0.25"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:id="@+id/sourceArtistGenre">
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/source_artist_image_genre"
+                        circleImageUrl="@{lineGenreInfo.sourceArtist.images[0].url}"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginStart="5dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:onClick="@{() -> graphClickHandler.onCloseBundleClick()}" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/source_artist_image_genre"
+                        android:layout_centerHorizontal="true"
+                        android:padding="2dp"
+                        android:textAlignment="center"
+                        android:text="@{lineGenreInfo.sourceArtist.artistName}" />
+                </RelativeLayout>
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="0.4"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:orientation="vertical">
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/genresLineRecycler"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
+                    </androidx.recyclerview.widget.RecyclerView>
+                </LinearLayout>
+                <RelativeLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="0.25"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:id="@+id/targetArtistGenre">
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/target_artist_image_genre"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginStart="5dp"
+                        android:onClick="@{() -> graphClickHandler.onCloseBundleClick()}"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        circleImageUrl="@{lineGenreInfo.targetArtist.images[0].url}" />
+                    <TextView
+                        android:id="@+id/source_artist_name_genre"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="2dp"
+                        android:textAlignment="center"
+                        android:layout_centerHorizontal="true"
+                        android:layout_below="@+id/target_artist_image_genre"
+                        android:text="@{lineGenreInfo.targetArtist.artistName}">
+                    </TextView>
+                </RelativeLayout>
+            </LinearLayout>
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+</layout>
