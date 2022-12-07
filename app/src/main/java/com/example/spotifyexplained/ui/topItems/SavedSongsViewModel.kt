@@ -6,11 +6,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.spotifyexplained.activity.MainActivity
+import com.example.spotifyexplained.general.Config
+import com.example.spotifyexplained.general.GraphInfoHelper
 import com.example.spotifyexplained.general.Helper
 import com.example.spotifyexplained.general.VisualTabClickHandler
 import com.example.spotifyexplained.model.*
+import com.example.spotifyexplained.model.enums.*
 import com.example.spotifyexplained.services.ApiHelper
-import com.example.spotifyexplained.services.SessionManager
 import kotlinx.coroutines.launch
 
 /**
@@ -32,51 +34,38 @@ class SavedSongsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
     val selectedTrack = MutableLiveData<Track>()
     val artistName = MutableLiveData<String>().apply { value = "" }
     val imageUrl = MutableLiveData<String>().apply { value = "" }
-    val settings = MutableLiveData<GraphSettings>().apply { value = GraphSettings(
-        artistsSelected = false,
-        relatedFlag = false,
-        genresFlag = true,
-        featuresFlag = true,
-        zoomFlag = true
-    ) }
+    val settings = MutableLiveData<GraphSettings>().apply { value = Config.graphSettings}
 
     val saved: MutableLiveData<List<Track>> by lazy {
         MutableLiveData<List<Track>>(ArrayList())
     }
-    val tracksFeatures: MutableLiveData<List<TrackAudioFeatures>> by lazy {
-        MutableLiveData<List<TrackAudioFeatures>>(ArrayList())
-    }
-
     var genreColorMap: HashMap<String, MixableColor> = HashMap()
 
-    val allGraphNodes: MutableLiveData<MutableList<TrackAudioFeatures>> by lazy {
-        MutableLiveData<MutableList<TrackAudioFeatures>>(mutableListOf())
+    val allGraphNodes: MutableLiveData<List<TrackAudioFeatures>> by lazy {
+        MutableLiveData<List<TrackAudioFeatures>>(listOf())
     }
-    val nodes: MutableLiveData<ArrayList<D3Node>> by lazy {
-        MutableLiveData<ArrayList<D3Node>>(ArrayList())
+    val nodes: MutableLiveData<ArrayList<D3ForceNode>> by lazy {
+        MutableLiveData<ArrayList<D3ForceNode>>(ArrayList())
     }
-    val links: MutableLiveData<ArrayList<D3Link>> by lazy {
-        MutableLiveData<ArrayList<D3Link>>(ArrayList())
+    val links: MutableLiveData<ArrayList<D3ForceLink>> by lazy {
+        MutableLiveData<ArrayList<D3ForceLink>>(ArrayList())
     }
+
+    private lateinit var tracksFeatures: List<TrackAudioFeatures>
 
     private val context: Context? by lazy {
         activity
     }
 
     init {
-        if (SessionManager.tokenExpired()){
-            (activity as MainActivity).authorizeUser()
-        }  else {
-            viewModelScope.launch {
-                loadingState.value = LoadingState.LOADING
-                getUserSavedTracks()
-                recommendTracksGetFeatures()
-                getTracksArtistGenres()
-                getTracksRelatedArtists()
-                prepareNodesAndEdges()
-                loadingState.value = LoadingState.SUCCESS
-
-            }
+        viewModelScope.launch {
+            loadingState.value = LoadingState.LOADING
+            getUserSavedTracks()
+            recommendTracksGetFeatures()
+            getTracksArtistGenres()
+            getTracksRelatedArtists()
+            prepareNodesAndEdges()
+            loadingState.value = LoadingState.SUCCESS
         }
     }
 
@@ -95,15 +84,15 @@ class SavedSongsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
      * Gathers all graph elements
      */
     private suspend fun prepareNodesAndEdges(){
-        val forceGraph = Helper.prepareGraphTracks(settings.value!!, tracksFeatures.value!!, tracksFeatures.value!!.toMutableList())
+        val forceGraph = Helper.prepareGraphTracks(settings.value, tracksFeatures, tracksFeatures, context!!)
         nodes.value = forceGraph.nodes
         genreColorMap = forceGraph.genreColorMap
-        allGraphNodes.value = ApiHelper.getTracksAudioFeatures(forceGraph.nodeTracks)?.toMutableList() ?: return
+        allGraphNodes.value = ApiHelper.getTracksAudioFeatures(forceGraph.nodeTracks, context!!) ?: return
         links.value = forceGraph.links
     }
 
     private suspend fun getUserSavedTracks(){
-        saved.value = ApiHelper.getUserSavedTracks(Constants.savedTracksLimit)
+        saved.value = ApiHelper.getUserSavedTracks(Config.savedTracksLimit, context!!)
     }
 
     /**
@@ -111,16 +100,16 @@ class SavedSongsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
      */
     private suspend fun recommendTracksGetFeatures() {
         val response =
-            ApiHelper.getTracksAudioFeatures(saved.value!!)
+            ApiHelper.getTracksAudioFeatures(saved.value ?: listOf(), context!!)
                 ?: return
-        tracksFeatures.value = response.toMutableList()
+        tracksFeatures = response.toMutableList()
     }
 
     /**
      * Assigns artist data to each recommended track
      */
     private suspend fun getTracksArtistGenres() {
-        val response = ApiHelper.getArtistWithGenres(saved.value!!.toMutableList()) ?: return
+        val response = ApiHelper.getArtistWithGenres(saved.value?.toMutableList() ?: mutableListOf(), context!!) ?: return
         for (i in response.artists.indices) {
             saved.value!![i].trackGenres = response.artists[i].genres
             saved.value!![i].artists[0].genres = response.artists[i].genres
@@ -133,13 +122,13 @@ class SavedSongsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
      * Assigns related artist to each track's artist
      */
     private suspend fun getTracksRelatedArtists() {
-        for (track in saved.value!!) {
-            var trackArtist = (context as MainActivity).viewModel.topArtists.value!!.firstOrNull { it.artistId == track.artists[0].artistId }
+        for (track in saved.value ?: listOf()) {
+            var trackArtist = (context as MainActivity).viewModel.topArtists.value?.firstOrNull { it.artistId == track.artists[0].artistId }
             if (trackArtist == null){
-                trackArtist = (context as MainActivity).viewModel.topTracks.value!!.firstOrNull { it.track.artists[0].artistId == track.artists[0].artistId }?.track?.artists?.get(0)
+                trackArtist = (context as MainActivity).viewModel.topTracks.value?.firstOrNull { it.track.artists[0].artistId == track.artists[0].artistId }?.track?.artists?.get(0)
             }
             track.artists[0].related_artists = trackArtist?.related_artists
-                ?: (ApiHelper.getRelatedArtists(track.artists[0].artistId)?.toList() ?: mutableListOf())
+                ?: (ApiHelper.getRelatedArtists(track.artists[0].artistId, context!!)?.toList() ?: mutableListOf())
         }
     }
 
@@ -166,7 +155,7 @@ class SavedSongsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
     fun showBundleDetailInfo(nodeIndices: String, currentIndex: String): MutableList<BundleGraphItem> {
         detailViewVisible.value = true
         detailVisibleType.value = DetailVisibleType.BUNDLE
-        return Helper.showBundleDetailInfo(nodeIndices, currentIndex, listOf(), allGraphNodes.value!!.map { it.track }, tracksFeatures.value!!.map { it.track }, genreColorMap)
+        return GraphInfoHelper.showBundleDetailInfo(nodeIndices, currentIndex, listOf(), allGraphNodes.value!!.map { it.track }, tracksFeatures.map { it.track }, genreColorMap)
     }
     /**
      * Prepares data for line detail window
@@ -176,19 +165,19 @@ class SavedSongsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
         detailViewVisible.value = true
         when (nodeIndices!!.split(",").last()) {
             "RELATED" -> {
-                lineInfo.value = Helper.showLineDetailInfo(nodeIndices, listOf(), allGraphNodes.value!!.map { it.track })
+                lineInfo.value = GraphInfoHelper.showLineDetailInfo(nodeIndices, listOf(), allGraphNodes.value!!.map { it.track })
                 detailVisibleType.value = DetailVisibleType.LINE
             }
             "GENRE" -> {
-                lineGenreInfo.value = Helper.showLineDetailGenreInfo(nodeIndices, listOf(), allGraphNodes.value!!.map { it.track })
+                lineGenreInfo.value = GraphInfoHelper.showLineDetailGenreInfo(nodeIndices, listOf(), allGraphNodes.value!!.map { it.track })
                 detailVisibleType.value = DetailVisibleType.LINEGENRE
             }
             "FEATURE" -> {
-                lineFeaturesInfo.value = Helper.showLineDetailFeatureInfo(nodeIndices, allGraphNodes.value!!)
+                lineFeaturesInfo.value = GraphInfoHelper.showLineDetailFeatureInfo(nodeIndices, allGraphNodes.value!!)
                 detailVisibleType.value = DetailVisibleType.LINEFEATURE
             }
             "BUNDLE" -> {
-                lineBundleInfo.value = Helper.showBundleLineInfoTracks(nodeIndices, allGraphNodes.value!!, genreColorMap)
+                lineBundleInfo.value = GraphInfoHelper.showBundleLineInfoTracks(nodeIndices, allGraphNodes.value!!, genreColorMap)
                 detailVisibleType.value = DetailVisibleType.LINEBUNDLE
             }
         }
@@ -197,4 +186,16 @@ class SavedSongsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
     override fun onListClick() { visualState.value = VisualState.TABLE }
     override fun onGraphClick() { visualState.value = VisualState.GRAPH }
     override fun onSettingsClick() { visualState.value = VisualState.SETTINGS }
+
+    fun settingsChanged(type : SettingsItemType){
+        val currentSettings = settings.value!!
+        when (type) {
+            SettingsItemType.TRACK -> currentSettings.artistsSelected = !currentSettings.artistsSelected
+            SettingsItemType.RELATED -> currentSettings.relatedFlag = !currentSettings.relatedFlag
+            SettingsItemType.GENRE -> currentSettings.genresFlag = !currentSettings.genresFlag
+            SettingsItemType.FEATURE -> currentSettings.featuresFlag = !currentSettings.featuresFlag
+        }
+        settings.value = currentSettings
+        drawGraph()
+    }
 }

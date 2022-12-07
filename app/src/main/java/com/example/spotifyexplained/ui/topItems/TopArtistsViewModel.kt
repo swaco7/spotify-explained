@@ -6,11 +6,16 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.spotifyexplained.activity.MainActivity
+import com.example.spotifyexplained.general.Config
+import com.example.spotifyexplained.general.GraphInfoHelper
 import com.example.spotifyexplained.general.Helper
 import com.example.spotifyexplained.general.VisualTabClickHandler
 import com.example.spotifyexplained.model.*
+import com.example.spotifyexplained.model.enums.DetailVisibleType
+import com.example.spotifyexplained.model.enums.LoadingState
+import com.example.spotifyexplained.model.enums.VisualState
+import com.example.spotifyexplained.model.enums.ZoomType
 import com.example.spotifyexplained.services.ApiHelper
-import com.example.spotifyexplained.services.SessionManager
 import kotlinx.coroutines.launch
 
 /**
@@ -31,13 +36,7 @@ class TopArtistsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
     val selectedTrack = MutableLiveData<Track>()
     val artistName = MutableLiveData<String>().apply { value = "" }
     val imageUrl = MutableLiveData<String>().apply { value = "" }
-    val settings = MutableLiveData<GraphSettings>().apply { value = GraphSettings(
-        artistsSelected = false,
-        relatedFlag = false,
-        genresFlag = true,
-        featuresFlag = true,
-        zoomFlag = true
-    ) }
+    val settings = MutableLiveData<GraphSettings>().apply { value = Config.graphSettings}
 
     val artists: MutableLiveData<List<Artist>> by lazy {
         MutableLiveData<List<Artist>>(ArrayList())
@@ -47,11 +46,11 @@ class TopArtistsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
     val allGraphNodes: MutableLiveData<MutableList<Artist>> by lazy {
         MutableLiveData<MutableList<Artist>>(mutableListOf())
     }
-    val nodes: MutableLiveData<ArrayList<D3Node>> by lazy {
-        MutableLiveData<ArrayList<D3Node>>(ArrayList())
+    val nodes: MutableLiveData<ArrayList<D3ForceNode>> by lazy {
+        MutableLiveData<ArrayList<D3ForceNode>>(ArrayList())
     }
-    val links: MutableLiveData<ArrayList<D3Link>> by lazy {
-        MutableLiveData<ArrayList<D3Link>>(ArrayList())
+    val links: MutableLiveData<ArrayList<D3ForceLink>> by lazy {
+        MutableLiveData<ArrayList<D3ForceLink>>(ArrayList())
     }
 
     private val context: Context? by lazy {
@@ -59,16 +58,12 @@ class TopArtistsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
     }
 
     init {
-        if (SessionManager.tokenExpired()){
-            (activity as MainActivity).authorizeUser()
-        }  else {
-            viewModelScope.launch {
-                loadingState.value = LoadingState.LOADING
-                getUserTopArtists()
-                getArtistsRelatedArtists()
-                prepareNodesAndEdges()
-                loadingState.value = LoadingState.SUCCESS
-            }
+        viewModelScope.launch {
+            loadingState.value = LoadingState.LOADING
+            getUserTopArtists()
+            getArtistsRelatedArtists()
+            prepareNodesAndEdges()
+            loadingState.value = LoadingState.SUCCESS
         }
     }
 
@@ -87,7 +82,7 @@ class TopArtistsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
      * Gathers all graph elements
      */
     private suspend fun prepareNodesAndEdges(){
-        val forceGraph : ForceGraph = Helper.prepareGraphTopArtists(settings.value!!, artists.value!!.toMutableList())
+        val forceGraph : ForceGraph = Helper.prepareGraphTopArtists(settings.value, artists.value?.toMutableList() ?: mutableListOf(), context!!)
         nodes.value = forceGraph.nodes
         genreColorMap = forceGraph.genreColorMap
         allGraphNodes.value = forceGraph.nodeArtists.toMutableList()
@@ -95,17 +90,17 @@ class TopArtistsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
     }
 
     private suspend fun getUserTopArtists(){
-        artists.value = ApiHelper.getUserTopArtists(50)
+        artists.value = ApiHelper.getUserTopArtists(50, context!!)
     }
 
     /**
      * Assigns related artist to each track's artist
      */
     private suspend fun getArtistsRelatedArtists() {
-        for (artist in artists.value!!) {
+        for (artist in artists.value ?: listOf()) {
             val savedArtist = (context as MainActivity).viewModel.topArtists.value!!.firstOrNull { it.artistId == artist.artistId }
             artist.related_artists = savedArtist?.related_artists
-                ?: (ApiHelper.getRelatedArtists(artist.artistId)?.toList() ?: mutableListOf())
+                ?: (ApiHelper.getRelatedArtists(artist.artistId, context!!)?.toList() ?: mutableListOf())
         }
     }
 
@@ -116,8 +111,7 @@ class TopArtistsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
      */
     fun showDetailInfo(selectedArtist: Artist): List<GenreColor>? {
         artistName.value = selectedArtist.artistName
-        imageUrl.value =
-            if (selectedArtist.images!!.isNotEmpty()) selectedArtist.images!![0].url else ""
+        imageUrl.value = if (selectedArtist.images!!.isNotEmpty()) selectedArtist.images!![0].url else ""
         detailViewVisible.value = true
         detailVisibleType.value = DetailVisibleType.SINGLE
         return Helper.getGenreColorList(selectedArtist, genreColorMap)
@@ -132,7 +126,7 @@ class TopArtistsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
     fun showBundleDetailInfo(nodeIndices: String, currentIndex: String): MutableList<BundleGraphItem> {
         detailViewVisible.value = true
         detailVisibleType.value = DetailVisibleType.BUNDLE
-        return Helper.showBundleDetailInfo(nodeIndices, currentIndex, allGraphNodes.value!!, listOf(), listOf(), genreColorMap)
+        return GraphInfoHelper.showBundleDetailInfo(nodeIndices, currentIndex, allGraphNodes.value!!, listOf(), listOf(), genreColorMap)
     }
     /**
      * Prepares data for line detail window
@@ -142,15 +136,15 @@ class TopArtistsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
         detailViewVisible.value = true
         when (nodeIndices!!.split(",").last()) {
             "RELATED" -> {
-                lineInfo.value = Helper.showLineDetailInfo(nodeIndices, allGraphNodes.value!!, listOf())
+                lineInfo.value = GraphInfoHelper.showLineDetailInfo(nodeIndices, allGraphNodes.value!!, listOf())
                 detailVisibleType.value = DetailVisibleType.LINE
             }
             "GENRE" -> {
-                lineGenreInfo.value = Helper.showLineDetailGenreInfo(nodeIndices, allGraphNodes.value!!, listOf())
+                lineGenreInfo.value = GraphInfoHelper.showLineDetailGenreInfo(nodeIndices, allGraphNodes.value!!, listOf())
                 detailVisibleType.value = DetailVisibleType.LINEGENRE
             }
             "BUNDLE" -> {
-                lineBundleInfo.value = Helper.showBundleLineInfoArtists(nodeIndices, allGraphNodes.value!!, genreColorMap)
+                lineBundleInfo.value = GraphInfoHelper.showBundleLineInfoArtists(nodeIndices, allGraphNodes.value!!, genreColorMap)
                 detailVisibleType.value = DetailVisibleType.LINEBUNDLE
             }
         }

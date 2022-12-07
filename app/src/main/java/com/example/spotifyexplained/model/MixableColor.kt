@@ -3,7 +3,7 @@ package com.example.spotifyexplained.model
 import kotlin.math.abs
 
 
-class MixableColor(
+data class MixableColor(
     var r : Int,
     var g: Int,
     var b: Int,

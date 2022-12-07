@@ -1,15 +1,11 @@
 package com.example.spotifyexplained.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.spotifyexplained.databinding.SimilarByAttrRowBinding
 import com.example.spotifyexplained.databinding.SimilarByAttrRowTextBinding
-import com.example.spotifyexplained.databinding.TextValueItemBinding
 import com.example.spotifyexplained.general.TrackDetailClickHandler
-import com.example.spotifyexplained.model.SimilarTrack
-import com.example.spotifyexplained.model.Track
 import com.example.spotifyexplained.model.TrackValue
 
 class SimilarTracksByAttributeAdapter(var items: List<TrackValue>, var trackDetailClickHandler: TrackDetailClickHandler) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {

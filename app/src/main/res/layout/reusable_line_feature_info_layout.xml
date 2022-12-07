@@ -3,11 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <data>
-        <import type="com.example.spotifyexplained.model.DetailVisibleType"/>
+        <import type="com.example.spotifyexplained.model.enums.DetailVisibleType"/>
         <import type="android.view.View" />
         <variable
             name="detailVisibleType"
-            type="com.example.spotifyexplained.model.DetailVisibleType" />
+            type="com.example.spotifyexplained.model.enums.DetailVisibleType" />
         <variable
             name="detailViewVisible"
             type="Boolean" />

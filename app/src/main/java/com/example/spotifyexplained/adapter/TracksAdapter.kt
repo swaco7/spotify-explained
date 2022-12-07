@@ -7,7 +7,7 @@ import com.example.spotifyexplained.databinding.TracksRowBinding
 import com.example.spotifyexplained.model.Track
 import com.example.spotifyexplained.general.TrackDetailClickHandler
 
-class TracksAdapter(var items: List<Track>, var trackDetailClickHandler: TrackDetailClickHandler) : RecyclerView.Adapter<TracksAdapter.ViewHolder>() {
+class TracksAdapter(var items: List<Track>?, var trackDetailClickHandler: TrackDetailClickHandler) : RecyclerView.Adapter<TracksAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -16,20 +16,20 @@ class TracksAdapter(var items: List<Track>, var trackDetailClickHandler: TrackDe
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(items[position])
+        holder.bind(items?.get(position))
     }
 
     override fun getItemCount(): Int {
-        return items.size
+        return items?.size ?: 0
     }
 
-    fun updateData(items: List<Track>) {
+    fun updateData(items: List<Track>?) {
         this.items = items
         notifyDataSetChanged()
     }
 
     inner class ViewHolder(val binding: TracksRowBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: Track) {
+        fun bind(item: Track?) {
             binding.track = item
             binding.clickHandler = trackDetailClickHandler
             binding.executePendingBindings()

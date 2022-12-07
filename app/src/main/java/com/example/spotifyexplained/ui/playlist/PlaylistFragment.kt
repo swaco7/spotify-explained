@@ -26,15 +26,13 @@ import com.example.spotifyexplained.databinding.FragmentPlaylistBinding
 import com.example.spotifyexplained.general.App
 import com.example.spotifyexplained.model.Track
 import com.example.spotifyexplained.general.TrackDetailClickHandler
-import com.example.spotifyexplained.general.VisualTabClickHandler
-import com.example.spotifyexplained.model.Constants
-import com.example.spotifyexplained.model.TrackFeedbackType
-import com.example.spotifyexplained.model.VisualState
+import com.example.spotifyexplained.general.Config
+import com.example.spotifyexplained.model.enums.TrackFeedbackType
 import com.example.spotifyexplained.services.ApiHelper
 import com.example.spotifyexplained.services.AudioPage
 import com.example.spotifyexplained.ui.detail.TrackProgressBar
 import com.example.spotifyexplained.ui.general.HelpDialogFragment
-import com.example.spotifyexplained.ui.saved.TrackDatabaseViewModelFactory
+import com.example.spotifyexplained.general.TrackDatabaseViewModelFactory
 import com.google.android.material.snackbar.Snackbar
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
@@ -114,7 +112,9 @@ class PlaylistFragment : Fragment(), TrackDetailClickHandler{
                     viewModel.currentTrackUri.value = it.track.uri ?: ""
                 } else {
                     viewModel.currentTrackUri.value = it.track.uri ?: ""
-                    playWithConnect()
+                    if (viewModel.isPremium.value!!) {
+                        playWithConnect()
+                    }
                 }
             }
         }
@@ -212,12 +212,14 @@ class PlaylistFragment : Fragment(), TrackDetailClickHandler{
                             nameEditText.text.toString(),
                             description.text.toString(),
                             public.isChecked,
-                            collaborative.isChecked
+                            collaborative.isChecked,
+                            context!!
                         )
                         val snapshot = ApiHelper.addTracksToPlaylist(
                             playlist!!.id,
                             viewModel.playlistTracksLiveData.value!!.filter { it.trackType == TrackFeedbackType.POSITIVE }
-                                .map { it.track }.toMutableList()
+                                .map { it.track }.toMutableList(),
+                            context!!
                         )?.snapshot_id ?: ""
                         showSnackBar("Playlist ${nameEditText.text} created")
                     }
@@ -228,7 +230,6 @@ class PlaylistFragment : Fragment(), TrackDetailClickHandler{
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    @RequiresApi(Build.VERSION_CODES.O)
     /**
      * Loads content for 30 second long track preview
      * @param [track] track to show preview for
@@ -236,7 +237,7 @@ class PlaylistFragment : Fragment(), TrackDetailClickHandler{
     private fun showPreview(track: Track) {
         previewWebView.settings.javaScriptEnabled = true
         val displayMetrics = resources.displayMetrics
-        val rawHtml = AudioPage.getContent(track.preview_url!!, (displayMetrics.widthPixels / displayMetrics.density).toInt() - 100)
+        val rawHtml = AudioPage.getContent(track.preview_url ?: "", (displayMetrics.widthPixels / displayMetrics.density).toInt() - 100)
         val encodedHtml = Base64.getEncoder().encodeToString(rawHtml.toByteArray())
         previewWebView.loadData(encodedHtml, "text/html", "base64")
     }
@@ -278,8 +279,8 @@ class PlaylistFragment : Fragment(), TrackDetailClickHandler{
         suspendCoroutine { cont: Continuation<SpotifyAppRemote> ->
             SpotifyAppRemote.connect(
                 (context as MainActivity).application,
-                ConnectionParams.Builder(Constants.CLIENT_ID)
-                    .setRedirectUri(Constants.REDIRECT_URI)
+                ConnectionParams.Builder(Config.CLIENT_ID)
+                    .setRedirectUri(Config.REDIRECT_URI)
                     .showAuthView(showAuthView)
                     .build(),
                 object : Connector.ConnectionListener {

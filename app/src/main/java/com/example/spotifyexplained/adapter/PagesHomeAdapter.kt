@@ -1,21 +1,14 @@
 package com.example.spotifyexplained.adapter
 
-import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.NavHostFragment
 import androidx.recyclerview.widget.RecyclerView
-import com.example.spotifyexplained.activity.MainActivity
 import com.example.spotifyexplained.databinding.PageContentItemBinding
-import com.example.spotifyexplained.databinding.TextValueItemBinding
 import com.example.spotifyexplained.model.home.PageItem
 import com.example.spotifyexplained.model.home.PageType
-import com.example.spotifyexplained.model.home.StatsSectionItem
 import com.example.spotifyexplained.ui.home.HomeFragment
 import com.example.spotifyexplained.ui.home.HomeFragmentDirections
-import com.example.spotifyexplained.ui.recommend.spotify.RecommendFragmentDirections
 
 class PagesHomeAdapter(var items: List<PageItem>, var homeFragment: HomeFragment) : RecyclerView.Adapter<PagesHomeAdapter.ViewHolder>() {
 

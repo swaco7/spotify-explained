@@ -89,5 +89,16 @@
         Application offers tracks based on user\'s music and realtime feedback (positive, neutral or negative). \n\n
         User can save created playlist to Spotify app.
     </string>
+    <string name="track_detail_attribute_similarity_info">Absolute - actual value mapped to interval 0\-100.\n\nRelative - value relative to average from "random" set of tracks, mapped to interval 0\-100</string>
     <string name="settings_features_info_text">Set weight for each audio feature type.\nWeight set to 0 means that audio feature is not taken into consideration for selection of the tracks</string>
+    <string name="spotify">Spotify</string>
+    <string name="connection_dialog_message">Something went wrong. Check your connection and try again.</string>
+    <string name="connection_dialog_close_button">OK</string>
+    <string name="relative">Relative</string>
+    <string name="absolute">Absolute</string>
+    <string name="average_of_yours">Average of yours</string>
+    <string name="average_general">Average general</string>
+    <string name="tracks">Tracks</string>
+    <string name="artists">Artists</string>
+    <string name="genres">Genres</string>
 </resources>

@@ -421,7 +421,7 @@ object NetworkGraph {
                 "});"
     }
 
-    fun getHeader() : String {
+    fun getHTMLCSSHeader() : String {
         return "<!DOCTYPE html>\n" +
                 "<meta charset=\"utf-8\">\n" +
                 "<style>\n" +
@@ -434,7 +434,10 @@ object NetworkGraph {
                 "  stroke: #999;\n" +
                 "  stroke-opacity: 0.6;\n" +
                 "}\n" +
-                "\n" +
+                ".links path {\n" +
+                "  stroke-opacity: 0.6;\n" +
+                "  pointer-events: stroke;\n" +
+                "}\n" +
                 ".nodes circle {\n" +
                 "  stroke: #fff;\n" +
                 "  stroke-width: 1.5px;\n" +
@@ -754,10 +757,11 @@ object NetworkGraph {
                 "  artLines = []\n" +
                 "  var n = pairs.length\n" +
                 "  for (c = 0; c < n; ++c) {\n" +
-                "    pairs[c].lines[0].source = nodes.find(element => element.id === pairs[c].from);\n" +
-                "    pairs[c].lines[0].target = nodes.find(element => element.id === pairs[c].to);\n" +
-                "    pairs[c].lines[0].value = pairs[c].lines.length * 20\n" +
-                "    artLines.push(pairs[c].lines[0])\n" +
+                "   var pair = JSON.parse(JSON.stringify(pairs[c].lines[0]))\n" +
+                "    pair.source = nodes.find(element => element.id === pairs[c].from);\n" +
+                "    pair.target = nodes.find(element => element.id === pairs[c].to);\n" +
+                "    pair.value = pairs[c].lines.length * 20\n" +
+                "    artLines.push(pair)\n"+
                 "  }\n" +
                 "\n" +
                 "  mylink = gFirst.append(\"g\")\n" +

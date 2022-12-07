@@ -2,20 +2,24 @@ package com.example.spotifyexplained.ui.playlist
 
 import android.app.Activity
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.*
 import com.example.spotifyexplained.activity.MainActivity
-import com.example.spotifyexplained.database.*
+import com.example.spotifyexplained.database.FeaturesWeightEntity
+import com.example.spotifyexplained.database.PlaylistNextTrackEntity
+import com.example.spotifyexplained.database.PlaylistTrackEntity
+import com.example.spotifyexplained.database.TrackInPoolEntity
 import com.example.spotifyexplained.general.Helper
 import com.example.spotifyexplained.general.PlaylistClickHandler
 import com.example.spotifyexplained.general.VisualTabClickHandler
 import com.example.spotifyexplained.model.*
+import com.example.spotifyexplained.model.enums.LoadingState
+import com.example.spotifyexplained.model.enums.TrackFeedbackType
+import com.example.spotifyexplained.model.enums.VisualState
 import com.example.spotifyexplained.repository.TrackRepository
 import com.example.spotifyexplained.services.ApiHelper
 import com.example.spotifyexplained.services.SessionManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
@@ -93,7 +97,6 @@ class PlaylistViewModel(activity: Activity, private val repository: TrackReposit
                         val recommendedPool = tracks.filter { it.trackType == 0 }
                             .map { TrackAudioFeatures(it.track, it.features) }.toMutableList()
                         localFullPool.value = recommendedPool
-                        Log.e("pool", "here")
                         nextTrackFlow.collect { next ->
                             delay(200)
                             if (next.isEmpty()) {
@@ -129,12 +132,14 @@ class PlaylistViewModel(activity: Activity, private val repository: TrackReposit
      * Initializes features and pushes initialized features to database repository
      */
     private suspend fun initializeFeatures(){
-        val userTracks = ApiHelper.getTracksAudioFeatures((context as MainActivity).viewModel.topTracks.value!!.map { it.track }) ?: mutableListOf()
+        val userTracks = ApiHelper.getTracksAudioFeatures((context as MainActivity).viewModel.topTracks.value!!.map { it.track }, context!!) ?: mutableListOf()
         val averages = mutableListOf<Double>()
-        for (index in 0 until userTracks[0].features.count()) {
-            averages.add(userTracks.sumOf{ it.features.at(index)!! } / userTracks.size)
+        if (userTracks.isNotEmpty()) {
+            for (index in 0 until userTracks[0].features.count()) {
+                averages.add(userTracks.sumOf { it.features.at(index)!! } / userTracks.size)
+            }
+            insertFeatures(FeaturesWeightEntity("features", AudioFeatures("averages", averages)))
         }
-        insertFeatures(FeaturesWeightEntity("features", AudioFeatures("averages", averages)))
     }
 
     /**
@@ -159,7 +164,6 @@ class PlaylistViewModel(activity: Activity, private val repository: TrackReposit
      * Prepares layout values for current next track
      */
     private fun prepareNext(track: PlaylistNextTrackEntity){
-        Log.e("nextTrack", "prepareNext")
         trackName.value = track.track.trackName
         artistName.value = track.track.artists[0].artistName
         imageUrl.value = track.track.album.albumImages[0].url

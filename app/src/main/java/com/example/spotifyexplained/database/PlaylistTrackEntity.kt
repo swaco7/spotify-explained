@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.spotifyexplained.model.AudioFeatures
 import com.example.spotifyexplained.model.Track
-import com.example.spotifyexplained.model.TrackFeedbackType
+import com.example.spotifyexplained.model.enums.TrackFeedbackType
 
 @Entity(tableName = "playlist_track_table")
 class PlaylistTrackEntity(@PrimaryKey override val id: String,

@@ -3,8 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <data>
-        <import type="com.example.spotifyexplained.model.VisualState"/>
-        <import type="com.example.spotifyexplained.model.LoadingState"/>
+        <import type="com.example.spotifyexplained.model.enums.VisualState"/>
+        <import type="com.example.spotifyexplained.model.enums.LoadingState"/>
         <import type="android.view.View" />
         <variable
             name="viewModel"

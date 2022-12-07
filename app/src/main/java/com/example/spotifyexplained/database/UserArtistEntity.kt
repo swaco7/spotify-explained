@@ -11,6 +11,6 @@ import com.example.spotifyexplained.model.TrackAudioFeatures
 @Entity(tableName = "user_artist_table")
 class UserArtistEntity(@PrimaryKey val id: String,
                        @Embedded val artist: Artist,
-                       @Embedded val track: TrackAudioFeatures,
+                       @Embedded val track: TrackAudioFeatures?,
                        val isUserArtist: Boolean,
 )

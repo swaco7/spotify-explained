@@ -21,24 +21,16 @@ data class Artist(
     @SerializedName("related_artists")
     var related_artists: List<Artist>
 
-) : HasName {
+) {
     override fun hashCode(): Int {
         return artistId.hashCode()
     }
 
-    override fun getName(): String {
-        return artistName
-    }
-
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-
         other as Artist
-
         if (artistId != other.artistId) return false
-
         return true
     }
 }

@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.spotifyexplained.databinding.*
 import com.example.spotifyexplained.model.*
+import com.example.spotifyexplained.model.enums.BundleItemType
 
 class BundleAdapter(var items: List<BundleGraphItem>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 

@@ -15,9 +15,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SpotifyExplained">
         <activity
-            android:name=".activity.HighchartsActivity"
-            android:exported="false" />
-        <activity
             android:name=".activity.MainActivity"
             android:exported="true">
             <intent-filter>

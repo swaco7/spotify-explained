@@ -8,18 +8,17 @@ import androidx.lifecycle.*
 import com.example.spotifyexplained.R
 import com.example.spotifyexplained.activity.MainActivity
 import com.example.spotifyexplained.database.TrackCustomEntity
-import com.example.spotifyexplained.database.TrackEntity
 import com.example.spotifyexplained.database.TrackInPoolEntity
+import com.example.spotifyexplained.general.Config
 import com.example.spotifyexplained.general.ExpandClickHandler
 import com.example.spotifyexplained.general.Helper
 import com.example.spotifyexplained.general.VisualTabClickHandler
 import com.example.spotifyexplained.model.*
+import com.example.spotifyexplained.model.enums.*
 import com.example.spotifyexplained.repository.TrackRepository
 import com.example.spotifyexplained.services.ApiHelper
-import com.example.spotifyexplained.services.SessionManager
 import com.example.spotifyexplained.ui.general.HelpDialogFragment
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
@@ -43,24 +42,17 @@ class CustomRecommendSettingsViewModel(activity: Activity, private val repositor
     val expanded = MutableLiveData<Boolean>().apply { value = false }
     val popularityCheck = MutableLiveData<Boolean>().apply{ value = false }
 
-    private val tracksCount = MutableLiveData<Int>().apply {
-        value = 5
-    }
-
     val allGraphNodes: MutableLiveData<MutableList<BundleTrackFeatureItem>> by lazy {
         MutableLiveData<MutableList<BundleTrackFeatureItem>>(mutableListOf())
     }
-
     val audioFeatures: MutableLiveData<List<AudioFeatures>> by lazy {
         MutableLiveData<List<AudioFeatures>>(arrayListOf())
     }
-
-    val nodes: MutableLiveData<ArrayList<D3Node>> by lazy {
-        MutableLiveData<ArrayList<D3Node>>(arrayListOf())
+    val nodes: MutableLiveData<ArrayList<D3ForceNode>> by lazy {
+        MutableLiveData<ArrayList<D3ForceNode>>(arrayListOf())
     }
-
-    val linksDistance: MutableLiveData<ArrayList<D3LinkDistance>> by lazy {
-        MutableLiveData<ArrayList<D3LinkDistance>>(arrayListOf())
+    val linksDistance: MutableLiveData<ArrayList<D3ForceLinkDistance>> by lazy {
+        MutableLiveData<ArrayList<D3ForceLinkDistance>>(arrayListOf())
     }
 
     val featuresList = MutableLiveData<MutableList<AudioFeature>>().apply {
@@ -69,20 +61,18 @@ class CustomRecommendSettingsViewModel(activity: Activity, private val repositor
             value!!.add(AudioFeature(feature.value, 1.0))
         }
     }
-
-    private val tracksFromDatabaseFlow: Flow<MutableList<TrackCustomEntity>> = repository.allTracksCustom
-
-    private val tracksPoolFromDatabaseFlow : Flow<MutableList<TrackInPoolEntity>> = repository.allTracksPool
-
-    val recommendedTracks: LiveData<MutableList<TrackCustomEntity>> =
-        repository.allTracksCustom.asLiveData()
-
-    private val recommendedTracksLocal: MutableLiveData<List<TrackCustomEntity>> by lazy {
-        MutableLiveData<List<TrackCustomEntity>>(ArrayList())
-    }
     val userTracksAudioFeatures: MutableLiveData<List<TrackAudioFeatures>> by lazy {
         MutableLiveData<List<TrackAudioFeatures>>(ArrayList())
     }
+    val recommendedTracks: LiveData<MutableList<TrackCustomEntity>> = repository.allTracksCustom.asLiveData()
+
+    private val tracksCount = MutableLiveData<Int>().apply {
+        value = 5
+    }
+    private val tracksFromDatabaseFlow: Flow<MutableList<TrackCustomEntity>> = repository.allTracksCustom
+    private val tracksPoolFromDatabaseFlow : Flow<MutableList<TrackInPoolEntity>> = repository.allTracksPool
+
+    private lateinit var recommendedTracksLocal: List<TrackCustomEntity>
 
     private fun insertAll(tracks: List<TrackCustomEntity>) = viewModelScope.launch {
         repository.insertCustomAll(tracks)
@@ -101,16 +91,12 @@ class CustomRecommendSettingsViewModel(activity: Activity, private val repositor
     }
 
     init {
-        if (SessionManager.tokenExpired()) {
-            (activity as MainActivity).authorizeUser()
-        } else {
-            viewModelScope.launch {
-                tracksFromDatabaseFlow.collect { trackEntities ->
-                    if (trackEntities.isEmpty()) {
-                        reloadSpecific()
-                    } else {
-                        prepareGraph(trackEntities.map { it }.toMutableList())
-                    }
+        viewModelScope.launch {
+            tracksFromDatabaseFlow.collect { trackEntities ->
+                if (trackEntities.isEmpty()) {
+                    reloadSpecific()
+                } else {
+                    prepareGraph(trackEntities.map { it }.toMutableList())
                 }
             }
         }
@@ -120,21 +106,17 @@ class CustomRecommendSettingsViewModel(activity: Activity, private val repositor
      * Prepares full recommended tracks data
      */
     private fun reloadSpecific() {
-        if (SessionManager.tokenExpired()) {
-            (context as MainActivity).authorizeUser()
-        } else {
-            viewModelScope.launch {
-                loadingState.value = LoadingState.LOADING
-                getUserTracks()
-                tracksPoolFromDatabaseFlow.collect { tracks ->
-                    val recommendedPool = tracks.filter { it.trackType == 0 }
-                        .map { TrackAudioFeatures(it.track, it.features) }.toMutableList()
-                    val usersTracksPool = tracks.filter { it.trackType == 1 }
-                        .map { TrackAudioFeatures(it.track, it.features) }.toMutableList()
-                    if (tracks.isNotEmpty()) {
-                        getMostSimilarTracksBySettings(recommendedPool, usersTracksPool)
-                        loadingState.value = LoadingState.SUCCESS
-                    }
+        viewModelScope.launch {
+            loadingState.value = LoadingState.LOADING
+            getUserTracks()
+            tracksPoolFromDatabaseFlow.collect { tracks ->
+                val recommendedPool = tracks.filter { it.trackType == 0 }
+                    .map { TrackAudioFeatures(it.track, it.features) }.toMutableList()
+                val usersTracksPool = tracks.filter { it.trackType == 1 }
+                    .map { TrackAudioFeatures(it.track, it.features) }.toMutableList()
+                if (tracks.isNotEmpty()) {
+                    getMostSimilarTracksBySettings(recommendedPool, usersTracksPool)
+                    loadingState.value = LoadingState.SUCCESS
                 }
             }
         }
@@ -157,31 +139,27 @@ class CustomRecommendSettingsViewModel(activity: Activity, private val repositor
      * @param [tracks] tracks for graph generation
      */
     private fun prepareGraph(tracks: MutableList<TrackCustomEntity>) {
-        if (SessionManager.tokenExpired()){
-            (context as MainActivity).authorizeUser()
-        }  else {
-            viewModelScope.launch {
-                recommendedTracksLocal.value = tracks
-                getUserTracks()
-                getAllRelatedArtist()
-                prepareD3RelationsDistance()
-                loadingState.value = LoadingState.SUCCESS
-            }
+        viewModelScope.launch {
+            recommendedTracksLocal = tracks
+            getUserTracks()
+            getAllRelatedArtist()
+            prepareD3RelationsDistance()
+            loadingState.value = LoadingState.SUCCESS
         }
     }
 
     private suspend fun getUserTracks() {
-        val topTracks = ApiHelper.getUserTopTracks(50) ?: mutableListOf()
-        val savedTracks = ApiHelper.getUserSavedTracks(Constants.savedTracksLimit) ?: mutableListOf()
+        val topTracks = ApiHelper.getUserTopTracks(50, context as MainActivity) ?: mutableListOf()
+        val savedTracks = ApiHelper.getUserSavedTracks(Config.savedTracksLimit, context!!) ?: mutableListOf()
         val userTracks =  (savedTracks + topTracks).distinctBy { it.trackId }
-        userTracksAudioFeatures.value = ApiHelper.getTracksAudioFeatures(userTracks.toMutableList())
+        userTracksAudioFeatures.value = ApiHelper.getTracksAudioFeatures(userTracks.toMutableList(), context!!)
     }
 
     /**
      * Assigns artist data to each recommended track
      */
     private suspend fun getArtistGenres(tracks: List<TrackAudioFeatures>) : List<TrackAudioFeatures>? {
-        val response = ApiHelper.getArtistWithGenres(tracks.map { it.track }.toMutableList()) ?: return null
+        val response = ApiHelper.getArtistWithGenres(tracks.map { it.track }.toMutableList(), context!!) ?: return null
         for (i in response.artists.indices) {
             tracks[i].track.trackGenres = response.artists[i].genres
             tracks[i].track.artists[0].artistPopularity = response.artists[i].artistPopularity
@@ -191,9 +169,9 @@ class CustomRecommendSettingsViewModel(activity: Activity, private val repositor
     }
 
     private suspend fun getAllRelatedArtist(){
-        for (track in recommendedTracksLocal.value!!) {
+        for (track in recommendedTracksLocal) {
             val artistId = track.track.artists[0].artistId
-            val relatedArtists = ApiHelper.getRelatedArtists(artistId)
+            val relatedArtists = ApiHelper.getRelatedArtists(artistId, context!!)
             track.track.track_related_artists = relatedArtists?.toList() ?: mutableListOf()
         }
     }
@@ -224,7 +202,7 @@ class CustomRecommendSettingsViewModel(activity: Activity, private val repositor
                 second = it.value.values.sorted().take(tracksCount.value!!).sum()
             )
         }.sortedBy { it.second }
-        var bestOverall = sorted.take(Constants.recommendedCount).map { it.first }
+        var bestOverall = sorted.take(Config.recommendedCount).map { it.first }
         bestOverall = getArtistGenres(bestOverall)!!
         insertAll(bestOverall.map { TrackCustomEntity(it.track.trackId, it.track, it.features) })
     }
@@ -233,7 +211,7 @@ class CustomRecommendSettingsViewModel(activity: Activity, private val repositor
      * Prepares nodes, edges, colors for graph
      */
     private fun prepareD3RelationsDistance() {
-        val allGraphData = Helper.prepareD3RelationsDistance(recommendedTracksLocal.value!!.map { TrackAudioFeatures(it.track, it.features)}.toMutableList())
+        val allGraphData = Helper.prepareD3RelationsDistance(recommendedTracksLocal.map { TrackAudioFeatures(it.track, it.features)}.toMutableList())
         nodes.value = allGraphData.first
         linksDistance.value = allGraphData.second
         allGraphNodes.value = allGraphData.third.toMutableList()
@@ -247,8 +225,7 @@ class CustomRecommendSettingsViewModel(activity: Activity, private val repositor
     fun showDetailInfo(track: Track){
         selectedTrack.value = track
         artistName.value = track.artists[0].artistName
-        imageUrl.value =
-            if (track.album.albumImages.isNotEmpty()) track.album.albumImages[0].url else ""
+        imageUrl.value = if (track.album.albumImages.isNotEmpty()) track.album.albumImages[0].url else ""
         isTrack.value = selectedTrack.value != null
         detailViewVisible.value = true
         detailVisibleType.value = DetailVisibleType.SINGLE

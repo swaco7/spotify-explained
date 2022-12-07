@@ -16,11 +16,11 @@ import com.example.spotifyexplained.activity.MainActivity
 import com.example.spotifyexplained.databinding.FragmentRecommendBaseBinding
 import com.example.spotifyexplained.general.App
 import com.example.spotifyexplained.general.GestureListener
-import com.example.spotifyexplained.model.LoadingState
+import com.example.spotifyexplained.general.TrackDatabaseViewModelFactory
+import com.example.spotifyexplained.model.enums.LoadingState
 import com.example.spotifyexplained.ui.recommend.custom.overall.CustomRecommendOverallFragment
 import com.example.spotifyexplained.ui.recommend.custom.settings.CustomRecommendSettingsFragment
 import com.example.spotifyexplained.ui.recommend.custom.specific.CustomRecommendSpecificFragment
-import com.example.spotifyexplained.ui.saved.TrackDatabaseViewModelFactoryWithFragment
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 
@@ -39,10 +39,9 @@ class CustomRecommendBaseFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         viewModel = ViewModelProvider(
-            this, TrackDatabaseViewModelFactoryWithFragment(
+            this, TrackDatabaseViewModelFactory(
                 context as MainActivity,
-                ((context as MainActivity).application as App).repository,
-                this
+                ((context as MainActivity).application as App).repository
             )
         )[CustomRecommendBaseViewModel::class.java]
         _binding = FragmentRecommendBaseBinding.inflate(inflater, container, false)

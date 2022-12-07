@@ -1,6 +1,5 @@
 package com.example.spotifyexplained.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -34,7 +33,6 @@ class GenresAdapter(var items: List<String>, var trackDetailClickHandler: TrackD
             binding.genre = item
             binding.clickHandler = trackDetailClickHandler
             binding.track = track
-            Log.e("genres", items.toString())
             binding.executePendingBindings()
         }
     }

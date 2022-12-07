@@ -20,10 +20,12 @@ import com.example.spotifyexplained.database.TrackEntity
 import com.example.spotifyexplained.databinding.FragmentRecommendCustomOverallBinding
 import com.example.spotifyexplained.general.*
 import com.example.spotifyexplained.model.*
-import com.example.spotifyexplained.services.NetworkFeaturesGraph
-import com.example.spotifyexplained.services.NetworkGraph
 import com.example.spotifyexplained.ui.recommend.custom.base.CustomRecommendBaseFragmentDirections
-import com.example.spotifyexplained.ui.saved.TrackDatabaseViewModelFactory
+import com.example.spotifyexplained.general.TrackDatabaseViewModelFactory
+import com.example.spotifyexplained.model.enums.BundleItemType
+import com.example.spotifyexplained.model.enums.LoadingState
+import com.example.spotifyexplained.model.enums.ZoomType
+import com.example.spotifyexplained.services.GraphHtmlBuilder
 import com.faltenreich.skeletonlayout.Skeleton
 import com.faltenreich.skeletonlayout.applySkeleton
 import java.util.*
@@ -162,29 +164,16 @@ class CustomRecommendOverallFragment : Fragment(), TrackDetailClickHandler, Grap
      *  @param [zoomType] type of the current selected zoom.
      */
     private fun drawD3Graph(
-        nodes: ArrayList<D3Node>,
-        links: ArrayList<D3LinkDistance>,
+        nodes: ArrayList<D3ForceNode>,
+        links: ArrayList<D3ForceLinkDistance>,
         zoomType: ZoomType,
         webView: WebView
     ) {
         if (zoomType == ZoomType.RESPONSIVE) {
             viewModel.graphLoadingState.value = LoadingState.LOADING
         }
-        val rawHtml = NetworkFeaturesGraph.getHeader() +
-                NetworkFeaturesGraph.addData(links.toString(), nodes.toString()) +
-                NetworkFeaturesGraph.getMainSVG() +
-                NetworkFeaturesGraph.getFeaturesSimulation(Constants.customRecommendOverallManyBody) +
-                NetworkFeaturesGraph.getFeaturesBody() +
-                if (zoomType == ZoomType.RESPONSIVE) {
-                    NetworkFeaturesGraph.getTickWithZoom() + NetworkFeaturesGraph.getZoomFeatures()
-                } else {
-                    NetworkFeaturesGraph.getTick() + NetworkFeaturesGraph.getZoom()
-                } +
-                NetworkFeaturesGraph.getHighlights() +
-                NetworkGraph.getTextWrap() +
-                NetworkFeaturesGraph.getFooter()
-        val encodedHtml = Base64.getEncoder().encodeToString(rawHtml.toByteArray())
-        webView.loadData(encodedHtml, Constants.mimeType, Constants.encoding)
+        val encodedHtml = GraphHtmlBuilder.buildFeaturesGraph(links, nodes, zoomType)
+        webView.loadData(encodedHtml, Config.mimeType, Config.encoding)
         webView.addJavascriptInterface(
             JsWebInterface(
                 requireContext(),
@@ -193,7 +182,7 @@ class CustomRecommendOverallFragment : Fragment(), TrackDetailClickHandler, Grap
                 showBundleDetailInfoFunc,
                 finishLoadingFunc,
                 showLineDetailInfoFunc
-            ), Constants.jsAppName
+            ), Config.jsAppName
         )
     }
 

@@ -13,18 +13,13 @@ class HelpDialogFragment(val text: String): DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return activity?.let {
             val builder = AlertDialog.Builder(it)
-            // Get the layout inflater
             val inflater = requireActivity().layoutInflater;
             val binding = DialogHelpBinding.inflate(inflater)
             binding.text = text
-            // Inflate and set the layout for the dialog
-            // Pass null as the parent view because its going in the dialog layout
             builder.setView(binding.root)
-                // Add action buttons
-                .setPositiveButton(R.string.cancel,
-                    DialogInterface.OnClickListener { dialog, id ->
-                        // sign in the user ...
-                    })
+                .setPositiveButton(R.string.cancel
+                ) { dialog, id ->
+                }
             builder.create()
         } ?: throw IllegalStateException("Activity cannot be null")
     }

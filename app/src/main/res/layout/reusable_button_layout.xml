@@ -3,11 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <data>
-        <import type="com.example.spotifyexplained.model.VisualState"/>
+        <import type="com.example.spotifyexplained.model.enums.VisualState"/>
         <import type="android.view.View" />
         <variable
             name="visualState"
-            type="com.example.spotifyexplained.model.VisualState" />
+            type="com.example.spotifyexplained.model.enums.VisualState" />
         <variable
             name="tabClickHandler"
             type="com.example.spotifyexplained.general.VisualTabClickHandler" />

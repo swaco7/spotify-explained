@@ -1,17 +1,14 @@
 package com.example.spotifyexplained.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.spotifyexplained.databinding.BundleFeatureItemBinding
 import com.example.spotifyexplained.databinding.BundleGenreItemBinding
 import com.example.spotifyexplained.databinding.BundleRelatedItemBinding
-import com.example.spotifyexplained.databinding.SimilarByAttrRowBinding
-import com.example.spotifyexplained.databinding.SimilarByAttrRowTextBinding
-import com.example.spotifyexplained.databinding.TextValueItemBinding
 import com.example.spotifyexplained.general.TrackDetailClickHandler
-import com.example.spotifyexplained.model.*
+import com.example.spotifyexplained.model.BundleLineInfo
+import com.example.spotifyexplained.model.enums.LinkType
 
 class BundleLineAdapter(var items: List<BundleLineInfo>, var trackDetailClickHandler: TrackDetailClickHandler? = null) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 

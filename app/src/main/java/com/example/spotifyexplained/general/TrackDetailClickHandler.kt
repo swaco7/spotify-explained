@@ -5,7 +5,6 @@ import com.example.spotifyexplained.model.Track
 interface TrackDetailClickHandler {
     fun onTrackClick(track: Track?) {}
 
-
     fun onTrackClick(trackName: String?){
         onTrackClick(trackName)
     }

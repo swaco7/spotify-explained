@@ -1,32 +1,17 @@
 package com.example.spotifyexplained.activity
 
-import android.app.Activity
-import android.content.Context
 import android.util.Log
-import androidx.lifecycle.*
-import com.example.spotifyexplained.database.ArtistRecommendEntity
-import com.example.spotifyexplained.database.UserArtistEntity
-import com.example.spotifyexplained.general.Helper
-import com.example.spotifyexplained.model.*
-import com.example.spotifyexplained.repository.TrackRepository
-import com.example.spotifyexplained.services.ApiHelper
-import com.example.spotifyexplained.services.SessionManager
-import com.spotify.android.appremote.api.SpotifyAppRemote
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import com.example.spotifyexplained.model.Artist
+import com.example.spotifyexplained.model.enums.LoadingState
+import com.example.spotifyexplained.model.TrackAudioFeatures
+import com.example.spotifyexplained.model.enums.VisualState
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.truncate
 
 
 class MainViewModel : ViewModel() {
-    var poolIsLoading = MutableLiveData<Boolean>().apply{
+    val poolIsLoading = MutableLiveData<Boolean>().apply{
         value = false
     }
     val loadingProgress = MutableLiveData<Int>().apply {
@@ -45,7 +30,6 @@ class MainViewModel : ViewModel() {
     val tabVisible = MutableLiveData<Boolean>().apply {
         value = true
     }
-    lateinit var job : Job
 
     val state = MutableLiveData<VisualState>().apply {
         value = VisualState.TABLE
@@ -54,16 +38,27 @@ class MainViewModel : ViewModel() {
         value = LoadingState.LOADING
     }
 
-    val topArtists: MutableLiveData<MutableList<Artist>> by lazy {
-        MutableLiveData<MutableList<Artist>>(mutableListOf())
+    val connectionError = MutableLiveData<Boolean>().apply {
+        value = false
     }
 
-    val topTracks: MutableLiveData<MutableList<TrackAudioFeatures>> by lazy {
-        MutableLiveData<MutableList<TrackAudioFeatures>>(mutableListOf())
+    val authenticationPending = MutableLiveData<Boolean>().apply{
+        value = false
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        Log.e("mainCleared", "--here")
+    val topArtists: MutableLiveData<List<Artist>> by lazy {
+        MutableLiveData<List<Artist>>(listOf())
+    }
+
+    val topTracks: MutableLiveData<List<TrackAudioFeatures>> by lazy {
+        MutableLiveData<List<TrackAudioFeatures>>(listOf())
+    }
+
+    lateinit var job : Job
+
+    fun showError(){
+        if (!connectionError.value!!){
+            connectionError.value = true
+        }
     }
 }

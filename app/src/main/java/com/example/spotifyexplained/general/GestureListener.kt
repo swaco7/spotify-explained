@@ -5,10 +5,10 @@ import android.view.MotionEvent
 import kotlin.math.abs
 
 class GestureListener(val onExpandClick: (Boolean) -> Unit) : GestureDetector.SimpleOnGestureListener() {
-    val velocityThreshold = 10
+    private val velocityThreshold = 10
 
-    override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
-        if (abs(velocityY) > velocityThreshold && e2 != null) {
+    override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+        if (abs(velocityY) > velocityThreshold) {
             if (e2.y > 0) {
                 onExpandClick(false)
             } else {

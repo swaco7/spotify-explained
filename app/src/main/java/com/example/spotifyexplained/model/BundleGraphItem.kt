@@ -1,7 +1,6 @@
 package com.example.spotifyexplained.model
 
-import com.google.gson.annotations.SerializedName
-import com.highsoft.highcharts.common.hichartsclasses.HIMarker
+import com.example.spotifyexplained.model.enums.BundleItemType
 
 data class BundleGraphItem(
     var track: Track?,

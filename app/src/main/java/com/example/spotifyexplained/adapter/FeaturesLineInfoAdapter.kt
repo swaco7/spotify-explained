@@ -1,15 +1,9 @@
 package com.example.spotifyexplained.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.spotifyexplained.databinding.FeatureInfoRowBinding
-import com.example.spotifyexplained.databinding.NameValueItemBinding
-import com.example.spotifyexplained.databinding.TextValueItemBinding
-import com.example.spotifyexplained.model.AudioFeature
-import com.example.spotifyexplained.model.AudioFeatureType
-import com.example.spotifyexplained.model.AudioFeatures
 
 class FeaturesLineInfoAdapter(var items: List<Pair<String, Double>>) : RecyclerView.Adapter<FeaturesLineInfoAdapter.ViewHolder>() {
 

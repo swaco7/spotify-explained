@@ -1,18 +1,14 @@
 package com.example.spotifyexplained.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.cruxlab.sectionedrecyclerview.lib.SectionAdapter
-import com.cruxlab.sectionedrecyclerview.lib.SectionManager
 import com.example.spotifyexplained.R
 import com.example.spotifyexplained.databinding.StickyAdapterItemRowBinding
-import com.example.spotifyexplained.general.ExpandClickHandler
-import com.example.spotifyexplained.model.RecommendSeedType
-import com.example.spotifyexplained.model.Track
+import com.example.spotifyexplained.model.enums.RecommendSeedType
 import com.example.spotifyexplained.ui.recommend.spotify.combined.CombinedRecommendViewModel
 
 

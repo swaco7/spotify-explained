@@ -30,14 +30,10 @@ data class Track(
 
     @SerializedName("popularity")
     var popularity: Int
-) : HasName {
+) {
 
     override fun hashCode(): Int {
         return (trackName + artists[0].artistName).hashCode()
-    }
-
-    override fun getName(): String {
-        return trackName
     }
 
     override fun equals(other: Any?): Boolean {
@@ -50,10 +46,6 @@ data class Track(
 
         return true
     }
-
-//    fun mockInstance(): Track {
-//        return Track("1234", "mockName", Album("1234album"))
-//    }
 }
 
 

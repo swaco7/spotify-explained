@@ -1,16 +1,13 @@
 package com.example.spotifyexplained.ui.detail
 
 import android.annotation.SuppressLint
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.widget.*
-import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -24,14 +21,16 @@ import com.example.spotifyexplained.activity.MainActivity
 import com.example.spotifyexplained.adapter.SimilarTracksAdapter
 import com.example.spotifyexplained.adapter.SimilarTracksByAttributeAdapter
 import com.example.spotifyexplained.databinding.FragmentRecommendTrackDetailPageBinding
+import com.example.spotifyexplained.general.App
+import com.example.spotifyexplained.general.Config
 import com.example.spotifyexplained.general.TrackDetailClickHandler
 import com.example.spotifyexplained.model.*
 import com.example.spotifyexplained.services.AudioPage
 import com.example.spotifyexplained.services.HorizontalBarChart
 import com.example.spotifyexplained.services.RadarChart
 import com.example.spotifyexplained.ui.general.HelpDialogFragment
-import com.example.spotifyexplained.ui.home.HomeFragmentDirections
-import com.example.spotifyexplained.ui.saved.TrackViewModelFactory
+import com.example.spotifyexplained.general.TrackViewModelFactory
+import com.example.spotifyexplained.model.enums.AudioFeatureType
 import com.google.android.material.snackbar.Snackbar
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
@@ -51,43 +50,44 @@ import kotlin.coroutines.suspendCoroutine
  */
 class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView.OnItemSelectedListener {
     private lateinit var viewModel: TrackDetailPageViewModel
-    private var _binding: FragmentRecommendTrackDetailPageBinding? = null
     private lateinit var webView : WebView
     private lateinit var previewWebView : WebView
     private lateinit var chartWebView : WebView
-    private lateinit var tracksAdapter : SimilarTracksAdapter
-    private lateinit var tracksByAttrAdapter : SimilarTracksByAttributeAdapter
     private lateinit var trackProgressBar : TrackProgressBar
     private lateinit var connectButton : AppCompatImageButton
     private lateinit var saveButton : Button
+    private var _binding: FragmentRecommendTrackDetailPageBinding? = null
     private val binding get() = _binding!!
     private var chosenIndex : Int = 0
     private var position: Int = 0
     private var playerStateSubscription: Subscription<PlayerState>? = null
     private var capabilitiesSubscription: Subscription<Capabilities>? = null
-    var spotifyAppRemote: SpotifyAppRemote? = null
+    private var spotifyAppRemote: SpotifyAppRemote? = null
     private val errorCallback = { _: Throwable -> logError() }
     private val args: TrackDetailPageFragmentArgs by navArgs()
 
-
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        viewModel = ViewModelProvider(this, TrackViewModelFactory(context as MainActivity, args.track))[TrackDetailPageViewModel::class.java]
+        viewModel = ViewModelProvider(this, TrackViewModelFactory(context as MainActivity, args.track, ((context as MainActivity).application as App).repository))[TrackDetailPageViewModel::class.java]
         _binding = FragmentRecommendTrackDetailPageBinding.inflate(inflater, container, false)
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
-        val similarTracksList: RecyclerView = binding.similarTracksList
-        val similarTracksByAttribute : RecyclerView = binding.trackByAttributeList
         webView = binding.webView
         chartWebView = binding.webViewBar
-        tracksAdapter = SimilarTracksAdapter(viewModel.similarTracks.value!!, this)
+        previewWebView = binding.webViewPreview
+
+        // Similar tracks overall list
+        val similarTracksList: RecyclerView = binding.similarTracksList
+        val tracksAdapter = SimilarTracksAdapter(viewModel.similarTracks.value!!, this)
         similarTracksList.adapter = tracksAdapter
         similarTracksList.layoutManager = LinearLayoutManager(context)
-        tracksByAttrAdapter = SimilarTracksByAttributeAdapter(viewModel.mostSimilarByAttribute.value!!, this)
+
+        // Similar tracks by attribute list
+        val similarTracksByAttribute : RecyclerView = binding.trackByAttributeList
+        val tracksByAttrAdapter = SimilarTracksByAttributeAdapter(viewModel.mostSimilarByAttribute.value!!, this)
         similarTracksByAttribute.adapter = tracksByAttrAdapter
         similarTracksByAttribute.layoutManager = LinearLayoutManager(context)
         viewModel.mostSimilarByAttribute.observe(viewLifecycleOwner, tracksByAttrAdapter::updateData)
-        previewWebView = binding.webViewPreview
+
         viewModel.radarData.observe(viewLifecycleOwner) {
             if (it.tracksWithFeatures.isNotEmpty()) {
                 drawD3Graph(viewModel.radarData.value!!)
@@ -107,22 +107,13 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
             }
         }
         binding.infoSwitch.setOnClickListener {
-            val dialog = HelpDialogFragment("Absolute - actual value mapped to interval 0-100\n\nRelative - value relative to average from \"random\" set of tracks, mapped to interval 0-100")
+            val dialog = HelpDialogFragment(requireActivity().resources.getString(R.string.track_detail_attribute_similarity_info))
             val fragmentManager = requireActivity().supportFragmentManager
             dialog.show(fragmentManager, "help")
         }
-        binding.relativeSwitch.setOnCheckedChangeListener { _, b ->
-            viewModel.valueSwitchChanged(b, this.position)
-            binding.relativeSwitch.text = if (b) "Relative" else "Absolute"
-        }
-        connect(true)
-        connectButton = binding.connectPlayButton
-        connectButton.setOnClickListener {
-            playUri(viewModel.recommendedTrack.value!!.uri!!)
-        }
-        saveButton = binding.saveRemoveButton
-        saveButton.setOnClickListener {
-            if (viewModel.isSaved.value!!) onRemoveUriClicked() else onSaveUriClicked()
+        binding.relativeSwitch.setOnCheckedChangeListener { _, checked ->
+            viewModel.valueSwitchChanged(checked, this.position)
+            binding.relativeSwitch.text = if (checked) getString(R.string.relative) else getString(R.string.absolute)
         }
 
         val items = AudioFeatureType.values().toList()
@@ -133,6 +124,17 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
                 spinner.adapter = adapter
                 spinner.onItemSelectedListener = this
             }
+
+        // Spotify playback
+        connect(true)
+        connectButton = binding.connectPlayButton
+        connectButton.setOnClickListener {
+            playUri(viewModel.recommendedTrack.value!!.uri!!)
+        }
+        saveButton = binding.saveRemoveButton
+        saveButton.setOnClickListener {
+            if (viewModel.isSaved.value!!) onRemoveUriClicked() else onSaveUriClicked()
+        }
         binding.playPauseButton.setOnClickListener {
             assertAppRemoteConnected().let {
                 it.playerApi
@@ -198,8 +200,8 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
         suspendCoroutine { cont: Continuation<SpotifyAppRemote> ->
             SpotifyAppRemote.connect(
                 (context as MainActivity).application,
-                ConnectionParams.Builder(Constants.CLIENT_ID)
-                    .setRedirectUri(Constants.REDIRECT_URI)
+                ConnectionParams.Builder(Config.CLIENT_ID)
+                    .setRedirectUri(Config.REDIRECT_URI)
                     .showAuthView(showAuthView)
                     .build(),
                 object : Connector.ConnectionListener {
@@ -329,7 +331,6 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
      * Subscribes to PlayerState
      */
     private fun onSubscribedToPlayerStateButtonClicked() {
-        Log.e("PlayerState", "sub")
         playerStateSubscription = cancelAndResetSubscription(playerStateSubscription)
         playerStateSubscription = assertAppRemoteConnected()
             .playerApi
@@ -408,7 +409,7 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
 
     /**
      * Navigates to track detail page
-     * @param [track] selected track object
+     * @param [trackName] selected track object
      */
     override fun onTrackClick(trackName: String?) {
         val index = viewModel.radarData.value!!.tracksWithFeatures.indexOfFirst { it.track.trackName == trackName }
@@ -472,8 +473,7 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
      *  Loads horizontal bar chart html into the webView.
      *  @param [data] list of data units.
      */
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun drawD3GraphBar(data: MutableList<DataUnit>) {
+    private fun drawD3GraphBar(data: List<DataUnit>) {
         chartWebView.settings.javaScriptEnabled = true
         val displayMetrics = resources.displayMetrics
         val rawHtml = HorizontalBarChart.getHeader() +

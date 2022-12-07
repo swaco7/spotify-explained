@@ -5,15 +5,11 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.example.spotifyexplained.R
-import com.example.spotifyexplained.activity.MainActivity
-import com.example.spotifyexplained.adapter.TracksAdapter
 import com.example.spotifyexplained.databinding.FragmentTopItemsBinding
 import com.example.spotifyexplained.ui.general.HelpDialogFragment
-import com.example.spotifyexplained.ui.saved.ContextViewModelFactory
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 

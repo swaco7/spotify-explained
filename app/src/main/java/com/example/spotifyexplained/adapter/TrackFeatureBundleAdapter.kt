@@ -4,8 +4,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.spotifyexplained.databinding.*
-import com.example.spotifyexplained.general.TrackDetailClickHandler
 import com.example.spotifyexplained.model.*
+import com.example.spotifyexplained.model.enums.BundleItemType
 
 class TrackFeatureBundleAdapter(var items: List<BundleTrackFeatureItem>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -50,7 +50,7 @@ class TrackFeatureBundleAdapter(var items: List<BundleTrackFeatureItem>) : Recyc
     inner class ViewHolder(val binding: TrackBundleRowBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: BundleTrackFeatureItem) {
             binding.track = item.track
-            binding.featuresAdapter = FeaturesAdapter(item.audioFeatures!!.sortedByDescending { it.second })
+            binding.featuresAdapter = FeaturesAdapter(item.audioFeatures.sortedByDescending { it.second })
             binding.executePendingBindings()
         }
     }

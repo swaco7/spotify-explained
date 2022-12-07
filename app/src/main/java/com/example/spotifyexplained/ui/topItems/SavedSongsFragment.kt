@@ -16,12 +16,14 @@ import com.example.spotifyexplained.R
 import com.example.spotifyexplained.activity.MainActivity
 import com.example.spotifyexplained.adapter.*
 import com.example.spotifyexplained.databinding.FragmentSavedTracksBinding
-import com.example.spotifyexplained.databinding.FragmentTopTracksBinding
 import com.example.spotifyexplained.general.*
 import com.example.spotifyexplained.model.*
-import com.example.spotifyexplained.services.NetworkGraph
-import com.example.spotifyexplained.ui.saved.ContextViewModelFactory
-import com.faltenreich.skeletonlayout.Skeleton
+import com.example.spotifyexplained.general.ContextViewModelFactory
+import com.example.spotifyexplained.model.enums.DetailVisibleType
+import com.example.spotifyexplained.model.enums.LoadingState
+import com.example.spotifyexplained.model.enums.SettingsItemType
+import com.example.spotifyexplained.model.enums.ZoomType
+import com.example.spotifyexplained.services.GraphHtmlBuilder
 import com.faltenreich.skeletonlayout.applySkeleton
 import java.util.*
 
@@ -45,7 +47,6 @@ class SavedSongsFragment : Fragment(), TrackDetailClickHandler, GraphClickHandle
     private val finishLoadingFunc = { this.finishLoading() }
     private val showLineDetailInfoFunc = { message: String -> this.showLineDetailInfo(message) }
     private val binding get() = _binding!!
-    private lateinit var skeleton: Skeleton
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         viewModel = ViewModelProvider(
@@ -72,7 +73,7 @@ class SavedSongsFragment : Fragment(), TrackDetailClickHandler, GraphClickHandle
         tracksList.adapter = adapter
         tracksList.itemAnimator = null
         viewModel.saved.observe(viewLifecycleOwner, adapter::updateData)
-        skeleton = tracksList.applySkeleton(R.layout.skeleton_tracks_row, 20)
+        val skeleton = tracksList.applySkeleton(R.layout.skeleton_tracks_row, 20)
         skeleton.maskColor = Helper.getSkeletonColor(this.requireContext())
         skeleton.showSkeleton()
 
@@ -120,29 +121,21 @@ class SavedSongsFragment : Fragment(), TrackDetailClickHandler, GraphClickHandle
      *  @param [zoomType] type of the current selected zoom.
      */
     private fun drawD3Graph(
-        nodes: ArrayList<D3Node>,
-        links: ArrayList<D3Link>,
+        nodes: ArrayList<D3ForceNode>,
+        links: ArrayList<D3ForceLink>,
         zoomType: ZoomType
     ) {
         if (zoomType == ZoomType.RESPONSIVE) {
             viewModel.graphLoadingState.value = LoadingState.LOADING
         }
-        val rawHtml = NetworkGraph.getHeader() +
-                NetworkGraph.addData(links.toString(), nodes.toString()) +
-                NetworkGraph.getMainSVG() +
-                NetworkGraph.getBaseSimulation(Constants.topTracksManyBody, Constants.topTracksCollisions) +
-                NetworkGraph.getBody() +
-                if (zoomType == ZoomType.RESPONSIVE) {
-                    NetworkGraph.getTickWithZoom() + NetworkGraph.getZoomFeatures()
-                } else {
-                    NetworkGraph.getTick() + NetworkGraph.getZoom()
-                } +
-                NetworkGraph.getBundleLines() +
-                NetworkGraph.getHighlights() +
-                NetworkGraph.getTextWrap() +
-                NetworkGraph.getFooter()
-        val encodedHtml = Base64.getEncoder().encodeToString(rawHtml.toByteArray())
-        webView.loadData(encodedHtml, Constants.mimeType, Constants.encoding)
+        val encodedHtml = GraphHtmlBuilder.buildBaseGraph(
+            links,
+            nodes,
+            zoomType,
+            Config.topTracksManyBody,
+            Config.topTracksCollisions
+        )
+        webView.loadData(encodedHtml, Config.mimeType, Config.encoding)
         webView.addJavascriptInterface(
             JsWebInterface(
                 requireContext(),
@@ -151,7 +144,7 @@ class SavedSongsFragment : Fragment(), TrackDetailClickHandler, GraphClickHandle
                 showBundleDetailInfoFunc,
                 finishLoadingFunc,
                 showLineDetailInfoFunc
-            ), Constants.jsAppName
+            ), Config.jsAppName
         )
     }
 
@@ -235,31 +228,19 @@ class SavedSongsFragment : Fragment(), TrackDetailClickHandler, GraphClickHandle
     }
 
     override fun onTrackIconClick() {
-        val currentSettings = viewModel.settings.value!!
-        currentSettings.artistsSelected = !currentSettings.artistsSelected
-        viewModel.settings.value = currentSettings
-        viewModel.drawGraph()
+        viewModel.settingsChanged(SettingsItemType.TRACK)
     }
 
     override fun onGenreIconClick() {
-        val currentSettings = viewModel.settings.value!!
-        currentSettings.genresFlag = !currentSettings.genresFlag
-        viewModel.settings.value = currentSettings
-        viewModel.drawGraph()
+        viewModel.settingsChanged(SettingsItemType.GENRE)
     }
 
     override fun onFeatureIconClick() {
-        val currentSettings = viewModel.settings.value!!
-        currentSettings.featuresFlag = !currentSettings.featuresFlag
-        viewModel.settings.value = currentSettings
-        viewModel.drawGraph()
+        viewModel.settingsChanged(SettingsItemType.FEATURE)
     }
 
     override fun onRelatedIconClick() {
-        val currentSettings = viewModel.settings.value!!
-        currentSettings.relatedFlag = !currentSettings.relatedFlag
-        viewModel.settings.value = currentSettings
-        viewModel.drawGraph()
+        viewModel.settingsChanged(SettingsItemType.RELATED)
     }
 
     override fun onInfoIconClick() {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout>
     <data>
-        <import type="com.example.spotifyexplained.model.LoadingState"/>
+        <import type="com.example.spotifyexplained.model.enums.LoadingState"/>
         <import type="android.view.View" />
         <variable
             name="viewModel"
@@ -136,14 +136,6 @@
         android:layout_below="@+id/top_tab"
         android:visibility="@{(viewModel.loadingState == LoadingState.LOADING || viewModel.loadingState == LoadingState.FAILURE) ? View.GONE : View.VISIBLE}"
         />
-
-<!--    <ProgressBar-->
-<!--        android:id="@+id/progressBar"-->
-<!--        style="?android:attr/progressBarStyle"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_below="@id/topBar"-->
-<!--        android:visibility="@{viewModel.loadingState == LoadingState.LOADING ? View.VISIBLE : View.GONE}" />-->
 
 </RelativeLayout>
     </layout>

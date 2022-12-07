@@ -40,13 +40,6 @@ class Converters {
     }
 
     @TypeConverter
-    fun fromTracksList(arr: List<TrackAudioFeatures>?): String? {
-        val gson = Gson()
-        return gson.toJson(arr)
-    }
-
-
-    @TypeConverter
     fun toImageArray(json: String?): Array<Image>? {
         val listType = object : TypeToken<Array<Image?>?>() {}.type
         return Gson().fromJson(json, listType)
@@ -64,9 +57,4 @@ class Converters {
         return Gson().fromJson(json, listType)
     }
 
-    @TypeConverter
-    fun toTrackAudioFeaturesList(json: String?): List<TrackAudioFeatures>? {
-        val listType = object : TypeToken<List<TrackAudioFeatures?>?>() {}.type
-        return Gson().fromJson(json, listType)
-    }
 }

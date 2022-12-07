@@ -36,8 +36,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{name}"
-                android:textSize="14sp"
+                android:text="@{name.toLowerCase()}"
+                android:textSize="12sp"
                 android:textColor="?android:textColorSecondary"
                 android:paddingStart="4dp"
                 android:paddingEnd="4dp">
@@ -46,8 +46,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{value}"
-                android:textSize="14sp"
+                android:text="@{value.toLowerCase()}"
+                android:textSize="12sp"
                 android:textColor="?android:textColorSecondary"
                 android:paddingStart="4dp"
                 android:paddingEnd="4dp">

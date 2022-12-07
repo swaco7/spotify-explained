@@ -2,6 +2,7 @@ package com.example.spotifyexplained.ui.recommend.spotify.combined
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,10 +23,10 @@ import com.example.spotifyexplained.database.CombinedRecommendEntity
 import com.example.spotifyexplained.databinding.FragmentRecommendCombinedBinding
 import com.example.spotifyexplained.general.*
 import com.example.spotifyexplained.model.*
-import com.example.spotifyexplained.services.NetworkGraph
 import com.example.spotifyexplained.ui.recommend.spotify.RecommendFragmentDirections
-import com.example.spotifyexplained.ui.saved.TrackDatabaseViewModelFactory
-import com.faltenreich.skeletonlayout.Skeleton
+import com.example.spotifyexplained.general.TrackDatabaseViewModelFactory
+import com.example.spotifyexplained.model.enums.*
+import com.example.spotifyexplained.services.GraphHtmlBuilder
 import com.faltenreich.skeletonlayout.applySkeleton
 import java.util.*
 
@@ -50,7 +51,7 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
     private val hideDetailInfoFunc = { this.hideDetailInfo() }
     private val finishLoadingFunc = { this.finishLoading() }
     private val showLineDetailInfoFunc = { message: String -> this.showLineDetailInfo(message) }
-    private lateinit var skeleton: Skeleton
+    private val showMetricsInfoFunc = {message: String -> this.showMetrics(message)}
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         viewModel = ViewModelProvider(
@@ -90,7 +91,7 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
         )
         recommendedList.adapter = adapter
         recommendedList.itemAnimator = null
-        skeleton = recommendedList.applySkeleton(R.layout.skeleton_tracks_simplified_row, 20)
+        val skeleton = recommendedList.applySkeleton(R.layout.skeleton_tracks_simplified_row, 20)
         skeleton.maskColor = Helper.getSkeletonColor(this.requireContext())
         skeleton.showSkeleton()
 
@@ -99,7 +100,7 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
         binding.graphClickHandler = this
 
         val sectionHeaderLayout: SectionHeaderLayout = binding.sectionHeaderLayout
-        val recyclerView: RecyclerView = binding.settingsList
+        val settingsRecycler: RecyclerView = binding.settingsList
 
         //Observers
         viewModel.tracksFromDatabaseLiveData.observe(viewLifecycleOwner) { tracks ->
@@ -156,10 +157,10 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
             binding.itemSelected = it.isNotEmpty()
         }
 
-        recyclerView.setHasFixedSize(false)
+        settingsRecycler.setHasFixedSize(false)
         sectionDataManager = SectionDataManager()
-        recyclerView.adapter = sectionDataManager.adapter
-        sectionHeaderLayout.attachTo(recyclerView, sectionDataManager)
+        settingsRecycler.adapter = sectionDataManager.adapter
+        sectionHeaderLayout.attachTo(settingsRecycler, sectionDataManager)
 
         viewModel.loadingState.observe(viewLifecycleOwner) { state ->
             if (state == LoadingState.SETTINGS_LOADED) {
@@ -172,18 +173,18 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
                                     it.trackId
                                 )
                             },
-                        "Tracks", viewModel, recommendSeedType = RecommendSeedType.TRACK
+                        getString(R.string.tracks), viewModel, recommendSeedType = RecommendSeedType.TRACK
                     )
                 val artistSectionAdapter =
                     SimpleSectionAdapter(isHeaderVisible = true, isHeaderPinned = true,
                         viewModel.topArtists.value!!.sortedBy { it.artistName }
                             .map { Pair(it.artistName, it.artistId) },
-                        "Artists", viewModel, recommendSeedType = RecommendSeedType.ARTIST
+                        getString(R.string.artists), viewModel, recommendSeedType = RecommendSeedType.ARTIST
                     )
                 val genresSectionAdapter =
                     SimpleSectionAdapter(isHeaderVisible = true, isHeaderPinned = true,
                         viewModel.availableGenres.value!!.sortedBy { it }.map { Pair(it, it) },
-                        "Genres", viewModel, recommendSeedType = RecommendSeedType.GENRE
+                        getString(R.string.genres), viewModel, recommendSeedType = RecommendSeedType.GENRE
                     )
                 sectionDataManager.addSection(tracksSectionAdapter, 2)
                 sectionDataManager.addSection(artistSectionAdapter, 2)
@@ -197,24 +198,42 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
                 skeleton.showSkeleton()
             }
         }
+
+        viewModel.metricLinks.observe(viewLifecycleOwner){
+            if (it.isNotEmpty()){
+                calcMetrics(0)
+            }
+        }
+        binding.metricsButton.setOnClickListener {
+            viewModel.prepareNodesAndEdgesForMetrics()
+        }
+        viewModel.metricIndex.observe(viewLifecycleOwner){
+            if (it > 0){
+                calcMetrics(it)
+            }
+        }
         return binding.root
     }
 
+    /**
+     * Filter items in the list based on the search query
+     * @param query search query
+     */
     private fun filter(query : String) {
         val tracksSectionAdapter = SimpleSectionAdapter(isHeaderVisible = true, isHeaderPinned = true,
             viewModel.topTracks.value!!.map { it.track }.filter { it.trackName.lowercase(Locale.getDefault()).contains(query) ||
                     it.artists[0].artistName.lowercase(Locale.getDefault()).contains(query)}.sortedBy { it.trackName }
                 .map { Pair("${it.trackName} - ${it.artists[0].artistName}", it.trackId) },
-            "Tracks", viewModel, recommendSeedType = RecommendSeedType.TRACK
+            getString(R.string.tracks), viewModel, recommendSeedType = RecommendSeedType.TRACK
         )
         val artistSectionAdapter = SimpleSectionAdapter(isHeaderVisible = true, isHeaderPinned = true,
             viewModel.topArtists.value!!.filter { it.artistName.lowercase(Locale.getDefault()).contains(query) }.sortedBy { it.artistName }
                 .map { Pair(it.artistName, it.artistId) },
-            "Artists", viewModel, recommendSeedType = RecommendSeedType.ARTIST
+            getString(R.string.artists), viewModel, recommendSeedType = RecommendSeedType.ARTIST
         )
         val genresSectionAdapter = SimpleSectionAdapter(isHeaderVisible = true, isHeaderPinned = true,
             viewModel.availableGenres.value!!.filter { it.lowercase(Locale.getDefault()).contains(query) }.sortedBy { it }.map { Pair(it, it) },
-            "Genres", viewModel, recommendSeedType = RecommendSeedType.GENRE
+            getString(R.string.genres), viewModel, recommendSeedType = RecommendSeedType.GENRE
         )
         if (sectionDataManager.sectionCount == 3) {
             sectionDataManager.replaceSection(0, tracksSectionAdapter, 2)
@@ -239,29 +258,21 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
      *  @param [zoomType] type of the current selected zoom.
      */
     private fun drawD3Graph(
-        nodes: ArrayList<D3Node>,
-        links: ArrayList<D3Link>,
+        nodes: ArrayList<D3ForceNode>,
+        links: ArrayList<D3ForceLink>,
         zoomType: ZoomType
     ) {
         if (zoomType == ZoomType.RESPONSIVE) {
             viewModel.graphLoadingState.value = LoadingState.LOADING
         }
-        val rawHtml = NetworkGraph.getHeader() +
-                NetworkGraph.addData(links.toString(), nodes.toString()) +
-                NetworkGraph.getMainSVG() +
-                NetworkGraph.getBaseSimulation(Constants.combinedRecommendManyBody, Constants.combinedRecommendCollisions) +
-                NetworkGraph.getBody() +
-                if (zoomType == ZoomType.RESPONSIVE) {
-                    NetworkGraph.getTickWithZoom() + NetworkGraph.getZoomFeatures()
-                } else {
-                    NetworkGraph.getTick() + NetworkGraph.getZoom()
-                } +
-                NetworkGraph.getBundleLines() +
-                NetworkGraph.getHighlights() +
-                NetworkGraph.getTextWrap() +
-                NetworkGraph.getFooter()
-        val encodedHtml = Base64.getEncoder().encodeToString(rawHtml.toByteArray())
-        webView.loadData(encodedHtml, Constants.mimeType, Constants.encoding)
+        val encodedHtml = GraphHtmlBuilder.buildBaseGraph(
+            links,
+            nodes,
+            zoomType,
+            Config.combinedRecommendManyBody,
+            Config.combinedRecommendCollisions
+        )
+        webView.loadData(encodedHtml, Config.mimeType, Config.encoding)
         webView.addJavascriptInterface(
             JsWebInterface(
                 requireContext(),
@@ -270,7 +281,7 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
                 showBundleDetailInfoFunc,
                 finishLoadingFunc,
                 showLineDetailInfoFunc
-            ), Constants.jsAppName
+            ), Config.jsAppName
         )
     }
 
@@ -317,7 +328,6 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
                 "GENRE" -> genresList.adapter = GenreColorAdapter(Helper.getGenreColorList(viewModel.lineGenreInfo.value!!.genres, viewModel.genreColorMap))
                 "FEATURE" -> featuresList.adapter = FeaturesLineInfoAdapter(viewModel.lineFeaturesInfo.value!!.features!!.map { Pair(it.first.name, it.second)})
                 "BUNDLE" -> bundleLineInfoList.adapter = BundleLineAdapter(viewModel.lineBundleInfo.value!!.items, this)
-
             }
         }
     }
@@ -362,35 +372,65 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
     }
 
     override fun onTrackIconClick() {
-        val currentSettings = viewModel.settings.value!!
-        currentSettings.artistsSelected = !currentSettings.artistsSelected
-        viewModel.settings.value = currentSettings
-        viewModel.drawGraph()
+        viewModel.settingsChanged(SettingsItemType.TRACK)
     }
 
     override fun onGenreIconClick() {
-        val currentSettings = viewModel.settings.value!!
-        currentSettings.genresFlag = !currentSettings.genresFlag
-        viewModel.settings.value = currentSettings
-        viewModel.drawGraph()
+        viewModel.settingsChanged(SettingsItemType.GENRE)
     }
 
     override fun onFeatureIconClick() {
-        val currentSettings = viewModel.settings.value!!
-        currentSettings.featuresFlag = !currentSettings.featuresFlag
-        viewModel.settings.value = currentSettings
-        viewModel.drawGraph()
+        viewModel.settingsChanged(SettingsItemType.FEATURE)
     }
 
     override fun onRelatedIconClick() {
-        val currentSettings = viewModel.settings.value!!
-        currentSettings.relatedFlag = !currentSettings.relatedFlag
-        viewModel.settings.value = currentSettings
-        viewModel.drawGraph()
+        viewModel.settingsChanged(SettingsItemType.RELATED)
     }
 
     override fun onInfoIconClick() {
         viewModel.detailViewVisible.value = true
         viewModel.detailVisibleType.value = DetailVisibleType.INFO
+    }
+
+
+    //-------- Metrics code ----------------//
+    private fun showMetrics(message: String?) {
+        (context as MainActivity).runOnUiThread {
+            val latexOutput = message!!.replace(",", " & ")
+            Log.e("metrics", latexOutput)
+            if (viewModel.metricIndex.value!! < 15) {
+                viewModel.metricIndex.value = viewModel.metricIndex.value!! + 1
+            }
+        }
+    }
+
+    private fun calcMetrics(index : Int){
+        drawMetrics(viewModel.metricNodes.value!!, viewModel.metricLinks.value!!, Config.manyBody[index % 4], Config.collisions[(index / 4)])
+    }
+
+    private fun drawMetrics(
+        nodes: ArrayList<D3ForceNode>,
+        links: ArrayList<D3ForceLink>,
+        manyBody : Int,
+        colls: Float
+    ) {
+        val encodedHtml = GraphHtmlBuilder.buildMetricsGraph(
+            links,
+            nodes,
+            manyBody,
+            colls
+        )
+        webView.loadData(encodedHtml, Config.mimeType, Config.encoding)
+        webView.addJavascriptInterface(
+            JsWebInterface(
+                requireContext(),
+                showDetailInfoFunc,
+                hideDetailInfoFunc,
+                showBundleDetailInfoFunc,
+                finishLoadingFunc,
+                showLineDetailInfoFunc,
+                showMetricsInfoFunc
+            ), Config.jsAppName
+        )
     }
 }

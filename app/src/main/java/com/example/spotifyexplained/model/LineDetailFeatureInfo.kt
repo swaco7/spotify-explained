@@ -1,7 +1,6 @@
 package com.example.spotifyexplained.model
 
-import com.google.gson.annotations.SerializedName
-import com.highsoft.highcharts.common.hichartsclasses.HIMarker
+import com.example.spotifyexplained.model.enums.AudioFeatureType
 
 data class LineDetailFeatureInfo(
     var sourceTrack: TrackAudioFeatures?,

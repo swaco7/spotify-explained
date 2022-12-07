@@ -2,7 +2,6 @@ package com.example.spotifyexplained.ui.recommend.spotify.artists
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -19,19 +18,20 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.spotifyexplained.R
 import com.example.spotifyexplained.adapter.*
 import com.example.spotifyexplained.database.ArtistRecommendEntity
-import com.example.spotifyexplained.databinding.FragmentRecommendTracksBinding
 import com.example.spotifyexplained.general.*
 import com.example.spotifyexplained.model.*
-import com.example.spotifyexplained.model.Constants.encoding
-import com.example.spotifyexplained.model.Constants.jsAppName
-import com.example.spotifyexplained.model.Constants.mimeType
-import com.example.spotifyexplained.services.NetworkGraph
+import com.example.spotifyexplained.general.Config.encoding
+import com.example.spotifyexplained.general.Config.jsAppName
+import com.example.spotifyexplained.general.Config.mimeType
 import com.example.spotifyexplained.ui.recommend.spotify.RecommendFragmentDirections
-import com.example.spotifyexplained.ui.saved.TrackDatabaseViewModelFactory
-import com.faltenreich.skeletonlayout.Skeleton
+import com.example.spotifyexplained.general.TrackDatabaseViewModelFactory
+import com.example.spotifyexplained.model.enums.DetailVisibleType
+import com.example.spotifyexplained.model.enums.LoadingState
+import com.example.spotifyexplained.model.enums.SettingsItemType
+import com.example.spotifyexplained.model.enums.ZoomType
+import com.example.spotifyexplained.services.GraphHtmlBuilder
 import com.faltenreich.skeletonlayout.applySkeleton
 import java.util.*
-import kotlin.collections.ArrayList
 
 /**
     This fragment is dedicated to recommendations from Spotify based on artist seeds
@@ -48,13 +48,13 @@ class ArtistRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickH
     private lateinit var featuresList: RecyclerView
     private lateinit var genresList: RecyclerView
     private lateinit var bundleLineInfoList: RecyclerView
+
     private val showDetailInfoFunc = { message: String -> this.showDetailInfo(message) }
-    private val showBundleDetailInfoFunc =
-        { tracks: String, message: String -> this.showBundleDetailInfo(tracks, message) }
+    private val showBundleDetailInfoFunc = { tracks: String, message: String -> this.showBundleDetailInfo(tracks, message) }
     private val hideDetailInfoFunc = { this.hideDetailInfo() }
     private val finishLoadingFunc = { this.finishLoading() }
     private val showLineDetailInfoFunc = { message: String -> this.showLineDetailInfo(message) }
-    private lateinit var skeleton: Skeleton
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -87,7 +87,7 @@ class ArtistRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickH
         recommendedList.addItemDecoration(DividerItemDecoration(recommendedList.context, LinearLayoutManager.VERTICAL))
         recommendedList.adapter = adapter
         recommendedList.itemAnimator = null
-        skeleton = recommendedList.applySkeleton(R.layout.skeleton_tracks_simplified_row, 20)
+        val skeleton = recommendedList.applySkeleton(R.layout.skeleton_tracks_simplified_row, 20)
         skeleton.maskColor = Helper.getSkeletonColor(this.requireContext())
         skeleton.showSkeleton()
 
@@ -155,31 +155,20 @@ class ArtistRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickH
      *  @param [zoomType] type of the current selected zoom.
      */
     private fun drawD3Graph(
-        nodes: java.util.ArrayList<D3Node>,
-        links: java.util.ArrayList<D3Link>,
+        nodes: ArrayList<D3ForceNode>,
+        links: ArrayList<D3ForceLink>,
         zoomType: ZoomType
     ) {
         if (zoomType == ZoomType.RESPONSIVE) {
             viewModel.graphLoadingState.value = LoadingState.LOADING
         }
-        val rawHtml = NetworkGraph.getHeader() +
-                NetworkGraph.addData(links.toString(), nodes.toString()) +
-                NetworkGraph.getMainSVG() +
-                NetworkGraph.getBaseSimulation(
-                    Constants.artistRecommendManyBody,
-                    Constants.artistRecommendCollisions
-                ) +
-                NetworkGraph.getBody() +
-                NetworkGraph.getBundleLines() +
-                if (zoomType == ZoomType.RESPONSIVE) {
-                    NetworkGraph.getTickWithZoom() + NetworkGraph.getZoomFeatures()
-                } else {
-                    NetworkGraph.getTick() + NetworkGraph.getZoom()
-                } +
-                NetworkGraph.getHighlights() +
-                NetworkGraph.getTextWrap() +
-                NetworkGraph.getFooter()
-        val encodedHtml = Base64.getEncoder().encodeToString(rawHtml.toByteArray())
+        val encodedHtml = GraphHtmlBuilder.buildBaseGraph(
+            links,
+            nodes,
+            zoomType,
+            Config.artistRecommendManyBody,
+            Config.artistRecommendCollisions
+        )
         webView.loadData(encodedHtml, mimeType, encoding)
         webView.addJavascriptInterface(
             JsWebInterface(
@@ -280,31 +269,19 @@ class ArtistRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickH
     }
 
     override fun onTrackIconClick() {
-        val currentSettings = viewModel.settings.value!!
-        currentSettings.artistsSelected = !currentSettings.artistsSelected
-        viewModel.settings.value = currentSettings
-        viewModel.drawGraph()
+        viewModel.settingsChanged(SettingsItemType.TRACK)
     }
 
     override fun onGenreIconClick() {
-        val currentSettings = viewModel.settings.value!!
-        currentSettings.genresFlag = !currentSettings.genresFlag
-        viewModel.settings.value = currentSettings
-        viewModel.drawGraph()
+        viewModel.settingsChanged(SettingsItemType.GENRE)
     }
 
     override fun onFeatureIconClick() {
-        val currentSettings = viewModel.settings.value!!
-        currentSettings.featuresFlag = !currentSettings.featuresFlag
-        viewModel.settings.value = currentSettings
-        viewModel.drawGraph()
+        viewModel.settingsChanged(SettingsItemType.FEATURE)
     }
 
     override fun onRelatedIconClick() {
-        val currentSettings = viewModel.settings.value!!
-        currentSettings.relatedFlag = !currentSettings.relatedFlag
-        viewModel.settings.value = currentSettings
-        viewModel.drawGraph()
+        viewModel.settingsChanged(SettingsItemType.RELATED)
     }
 
     override fun onInfoIconClick() {

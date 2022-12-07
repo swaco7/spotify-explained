@@ -17,7 +17,6 @@ class FeatureSettingsAdapter(var items: MutableList<AudioFeature>, val recommend
         return ViewHolder(binding)
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(items[position])
     }
@@ -32,7 +31,6 @@ class FeatureSettingsAdapter(var items: MutableList<AudioFeature>, val recommend
     }
 
     inner class ViewHolder(val binding: FeatureSettingsRowBinding) : RecyclerView.ViewHolder(binding.root) {
-        @RequiresApi(Build.VERSION_CODES.N)
         fun bind(item: AudioFeature) {
             binding.featureName = item.name
             binding.featureIndex = adapterPosition

@@ -1,5 +1,6 @@
 package com.example.spotifyexplained.model
 
+import com.example.spotifyexplained.model.enums.AudioFeatureType
 import com.google.gson.annotations.SerializedName
 
 data class AudioFeatures(

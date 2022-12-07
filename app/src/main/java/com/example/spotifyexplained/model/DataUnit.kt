@@ -1,11 +1,8 @@
 package com.example.spotifyexplained.model
 
 import android.text.Html
-import androidx.core.text.htmlEncode
-import com.highsoft.highcharts.common.hichartsclasses.HIMarker
-import kotlin.math.round
 
-class DataUnit(
+data class DataUnit(
     val name: String,
     val value: Double,
     val group: Int,

@@ -9,7 +9,8 @@ class JsWebInterface(
     val hideDetailInfo: () -> Unit,
     val showTracksBundleDetailInfo: (String, String) -> Unit,
     val finishLoadingFunc: () -> Unit,
-    val showLineDetailInfo: (String) -> Unit
+    val showLineDetailInfo: (String) -> Unit,
+    val showMetricsInfo: ((String) -> Unit)? = null
 ) {
     @JavascriptInterface
     fun showGenreDetailInfo(message: String?) {
@@ -30,5 +31,9 @@ class JsWebInterface(
     @JavascriptInterface
     fun showLineDetail(message: String?) {
         showLineDetailInfo(message!!)
+    }
+    @JavascriptInterface
+    fun showMetrics(message: String?) {
+        showMetricsInfo?.invoke(message!!)
     }
 }

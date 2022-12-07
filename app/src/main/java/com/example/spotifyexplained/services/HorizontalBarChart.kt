@@ -7,11 +7,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.ContextCompat.getSystemService
 
-
-
-
 object HorizontalBarChart {
-
     fun getBody(width: Int, height: Int) : String{
         return  "var margin = {top: 20, right: 20, bottom: 80, left: 30},\n" +
                 "    width = $width - margin.left - margin.right,\n" +

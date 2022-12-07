@@ -1,7 +1,7 @@
 package com.example.spotifyexplained.repository
 
 import androidx.annotation.WorkerThread
-import com.example.spotifyexplained.dao.TrackDao
+import com.example.spotifyexplained.database.TrackDao
 import com.example.spotifyexplained.database.*
 import kotlinx.coroutines.flow.Flow
 
@@ -17,14 +17,9 @@ class TrackRepository(private val trackDao: TrackDao) {
     val allUserTracks: Flow<MutableList<UserTrackEntity>> = trackDao.getAllUserTracks()
     val allUserArtists: Flow<MutableList<UserArtistEntity>> = trackDao.getAllUserArtists()
     val allPlaylistTracks: Flow<MutableList<PlaylistTrackEntity>> = trackDao.getPlaylistTracks()
-    val allPlaylistDiscardedTracks: Flow<MutableList<PlaylistDiscardedTrackEntity>> = trackDao.getPlaylistDiscardedTracks()
     val allPlaylistNextTrack: Flow<MutableList<PlaylistNextTrackEntity>> = trackDao.getPlaylistNextTrack()
     val allPlaylistFeatures: Flow<MutableList<FeaturesWeightEntity>> = trackDao.getPlaylistFeatures()
-
-    @WorkerThread
-    suspend fun insertTrack(track: TrackRecommendEntity) {
-        trackDao.insertTrack(track)
-    }
+    val allRandomTracks: Flow<MutableList<RandomTrackEntity>> = trackDao.getRandomTracks()
 
     @WorkerThread
     suspend fun insertTracks(tracks: List<TrackRecommendEntity>) {
@@ -32,18 +27,8 @@ class TrackRepository(private val trackDao: TrackDao) {
     }
 
     @WorkerThread
-    suspend fun insertArtist(track: ArtistRecommendEntity) {
-        trackDao.insertArtist(track)
-    }
-
-    @WorkerThread
     suspend fun insertArtists(tracks: List<ArtistRecommendEntity>) {
         trackDao.insertArtists(tracks)
-    }
-
-    @WorkerThread
-    suspend fun insertGenre(track: GenreRecommendEntity) {
-        trackDao.insertGenre(track)
     }
 
     @WorkerThread
@@ -76,11 +61,6 @@ class TrackRepository(private val trackDao: TrackDao) {
         trackDao.insertOverall(tracks)
     }
 
-//    @WorkerThread
-//    suspend fun insert(trackEntity: TrackCustomEntity) {
-//        trackDao.insertCustom(trackEntity)
-//    }
-
     @WorkerThread
     suspend fun insertCustomAll(tracks: List<TrackCustomEntity>) {
         trackDao.insertCustomAll(tracks)
@@ -97,11 +77,6 @@ class TrackRepository(private val trackDao: TrackDao) {
     }
 
     @WorkerThread
-    suspend fun insertListToUserTracks(tracks: List<UserTrackEntity>) {
-        trackDao.insertListToUserTracks(tracks)
-    }
-
-    @WorkerThread
     suspend fun insertListToUserArtists(artists: List<UserArtistEntity>) {
         trackDao.insertListToUserArtists(artists)
     }
@@ -112,8 +87,8 @@ class TrackRepository(private val trackDao: TrackDao) {
     }
 
     @WorkerThread
-    suspend fun insertToDiscardedPlaylist(track: PlaylistDiscardedTrackEntity) {
-        trackDao.insertToDiscardedPlaylist(track)
+    suspend fun insertToRandomTracks(tracks: List<RandomTrackEntity>) {
+        trackDao.insertRandomTracks(tracks)
     }
 
     @WorkerThread
@@ -187,11 +162,6 @@ class TrackRepository(private val trackDao: TrackDao) {
     }
 
     @WorkerThread
-    suspend fun deletePlaylistDiscarded() {
-        trackDao.deletePlaylistDiscarded()
-    }
-
-    @WorkerThread
     suspend fun deleteFromPlaylist(track: PlaylistTrackEntity) {
         trackDao.deleteFromPlaylist(track)
     }
@@ -206,5 +176,26 @@ class TrackRepository(private val trackDao: TrackDao) {
         trackDao.deleteFeatures()
     }
 
+    @WorkerThread
+    suspend fun deleteRandomTracks() {
+        trackDao.deleteRandomTracks()
+    }
 
+    @WorkerThread
+    suspend fun deleteAll(){
+        delete()
+        deleteTrack()
+        deleteArtist()
+        deleteGenre()
+        deleteCombined()
+        deletePool()
+        deleteSpecific()
+        deleteCustom()
+        deletePlaylist()
+        deletePlaylistNext()
+        deleteUserArtists()
+        deleteUserTracks()
+        deleteFeatures()
+        deleteRandomTracks()
+    }
 }

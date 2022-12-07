@@ -1,6 +1,5 @@
 package com.example.spotifyexplained.ui.home
 
-import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,10 +17,9 @@ import com.example.spotifyexplained.databinding.FragmentHomeBinding
 import com.example.spotifyexplained.general.App
 import com.example.spotifyexplained.general.Helper
 import com.example.spotifyexplained.general.TrackDetailClickHandler
-import com.example.spotifyexplained.model.LoadingState
+import com.example.spotifyexplained.model.enums.LoadingState
 import com.example.spotifyexplained.services.SessionManager
-import com.example.spotifyexplained.ui.recommend.custom.base.CustomRecommendBaseFragmentDirections
-import com.example.spotifyexplained.ui.saved.TrackDatabaseViewModelFactory
+import com.example.spotifyexplained.general.TrackDatabaseViewModelFactory
 import com.faltenreich.skeletonlayout.*
 import com.spotify.sdk.android.auth.AuthorizationClient
 
@@ -49,10 +47,10 @@ class HomeFragment : Fragment(), AdapterView.OnItemSelectedListener, TrackDetail
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
         val root: View = binding.root
-        val homeRecyclerView : RecyclerView = binding.homeRecyclerView
+        val homeRecyclerView = binding.homeRecyclerView
         homePageAdapter = HomePageAdapter(viewModel.statsItems.value!!, this, this)
         homeRecyclerView.adapter = homePageAdapter
-        skeleton = homeRecyclerView.applySkeleton(R.layout.home_section_skeleton)
+        skeleton = homeRecyclerView.applySkeleton(R.layout.skeleton_home_section)
         skeleton.maskColor = Helper.getSkeletonColor(this.requireContext())
         skeleton.showSkeleton()
 
@@ -80,7 +78,6 @@ class HomeFragment : Fragment(), AdapterView.OnItemSelectedListener, TrackDetail
             }
             popupMenu.show()
         }
-        (context as MainActivity).supportActionBar?.title = "Spotify Explained"
         return root
     }
 

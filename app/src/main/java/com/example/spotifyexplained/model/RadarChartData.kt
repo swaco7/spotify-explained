@@ -1,5 +1,7 @@
 package com.example.spotifyexplained.model
 
+import com.example.spotifyexplained.model.enums.AudioFeatureType
+
 data class RadarChartData(val tracksWithFeatures: List<TrackAudioFeatures>, val minMax: List<Pair<Double, Double>>,  val averageValues: List<Double>? = null, val averageGeneralValues: List<Double>? = null) {
     private lateinit var mapMinMax : MutableMap<Any, Pair<Double, Double>>
 
@@ -23,10 +25,13 @@ data class RadarChartData(val tracksWithFeatures: List<TrackAudioFeatures>, val 
 
     fun prepareItem(builder: StringBuilder, features: AudioFeatures){
         builder.append("[\n")
-        builder.append("{axis:\"${AudioFeatureType.ACOUSTICNESS}\",value:${normalize(AudioFeatureType.ACOUSTICNESS, features.acousticness!!)}},\n")
-        builder.append("{axis:\"${AudioFeatureType.DANCEABILITY}\",value:${normalize(AudioFeatureType.DANCEABILITY, features.danceability!!)}},\n")
+        builder.append("{axis:\"${AudioFeatureType.ACOUSTICNESS}\",value:${normalize(
+            AudioFeatureType.ACOUSTICNESS, features.acousticness!!)}},\n")
+        builder.append("{axis:\"${AudioFeatureType.DANCEABILITY}\",value:${normalize(
+            AudioFeatureType.DANCEABILITY, features.danceability!!)}},\n")
         builder.append("{axis:\"${AudioFeatureType.ENERGY}\",value:${normalize(AudioFeatureType.ENERGY, features.energy!!)}},\n")
-        builder.append("{axis:\"${AudioFeatureType.INSTRUMENTALNESS}\",value:${normalize(AudioFeatureType.INSTRUMENTALNESS, features.instrumentalness!!)}},\n")
+        builder.append("{axis:\"${AudioFeatureType.INSTRUMENTALNESS}\",value:${normalize(
+            AudioFeatureType.INSTRUMENTALNESS, features.instrumentalness!!)}},\n")
         builder.append("{axis:\"${AudioFeatureType.LIVENESS}\",value:${normalize(AudioFeatureType.LIVENESS, features.liveness!!)}},\n")
         builder.append("{axis:\"${AudioFeatureType.LOUDNESS}\",value:${normalize(AudioFeatureType.LOUDNESS, features.loudness!!)}},\n")
         builder.append("{axis:\"${AudioFeatureType.SPEECHINESS}\",value:${normalize(AudioFeatureType.SPEECHINESS, features.speechiness!!)}},\n")
@@ -39,7 +44,7 @@ data class RadarChartData(val tracksWithFeatures: List<TrackAudioFeatures>, val 
         val builder = StringBuilder()
         builder.append("[\n")
         for (feature in tracksWithFeatures) {
-            builder.append("\"${feature.track?.trackName ?: feature.features.featuresId} - ${feature.track?.artists?.get(0)?.artistName ?: ""}\",\n")
+            builder.append("\"${feature.track.trackName} - ${feature.track.artists[0].artistName}\",\n")
         }
         builder.removeSuffix(",")
         builder.append("]\n")

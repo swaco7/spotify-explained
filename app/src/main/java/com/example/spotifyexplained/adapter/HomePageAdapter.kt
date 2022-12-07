@@ -36,15 +36,6 @@ class HomePageAdapter(var items: List<HomeSection>, var homeFragment: HomeFragme
             }
         }
 
-        val wordCloudsViewListener = ViewListener { position ->
-            when (position) {
-                0 -> inflater.inflate(R.layout.page_custom_recomm, null)
-                1 -> inflater.inflate(R.layout.page_user_music, null)
-                2 -> inflater.inflate(R.layout.page_spotify_recomm, null)
-                else -> inflater.inflate(R.layout.page_playlist, null)
-            }
-        }
-
         return when (viewType) {
             HomeSectionType.STATS.value -> {
                 val binding = SectionHomeStatisticsBinding.inflate(inflater, parent, false)
@@ -93,19 +84,12 @@ class HomePageAdapter(var items: List<HomeSection>, var homeFragment: HomeFragme
         notifyDataSetChanged()
     }
 
-    inner class ViewHolder(val binding: SectionHomeBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: AudioFeature) {
-            //binding.genre = item.name
-            //binding.value = String.format("%.2f", item.value)
-            Log.e("genres", items.toString())
-            binding.executePendingBindings()
-        }
-    }
+
     inner class LeastPopularViewHolder(val binding: SectionHomeTracksBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: StatsSection) {
             binding.tracksExpanded = false
             binding.title = context.getString(R.string.least_popular)
-            if (item.items.isNotEmpty()) {
+            if (item.items != null && item.items.isNotEmpty()) {
                 binding.adapter = PopularityHomeAdapter(item.items.take(5))
             }
             binding.genresExpand.setOnClickListener {
@@ -114,7 +98,7 @@ class HomePageAdapter(var items: List<HomeSection>, var homeFragment: HomeFragme
                     if (binding.tracksExpanded!!) {
                         item.items
                     } else {
-                        item.items.take(5)
+                        item.items?.take(5)
                     }
                 )
             }
@@ -171,9 +155,9 @@ class HomePageAdapter(var items: List<HomeSection>, var homeFragment: HomeFragme
                 binding.genresExpanded = !(binding.genresExpanded!!)
                 binding.adapter = TopGenresHomeAdapter(
                     if (binding.genresExpanded!!) {
-                        item.items[current].items.take(15)
+                        item.items[current].items?.take(15)
                     } else {
-                        item.items[current].items.take(5)
+                        item.items[current].items?.take(5)
                     },
                     clickHandler
                 )
@@ -182,7 +166,7 @@ class HomePageAdapter(var items: List<HomeSection>, var homeFragment: HomeFragme
         }
 
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-            binding.adapter = TopGenresHomeAdapter((selectedItem.items[position].items.take(5)), clickHandler)
+            binding.adapter = TopGenresHomeAdapter((selectedItem.items[position].items?.take(5)), clickHandler)
             binding.genresExpanded = false
             current = position
         }

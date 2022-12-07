@@ -1,8 +1,5 @@
 package com.example.spotifyexplained.model
 
-import com.highsoft.highcharts.common.hichartsclasses.HIDataLabels
-import com.highsoft.highcharts.common.hichartsclasses.HIMarker
-
 data class GenresGroup(
     var name: String,
     val items: MutableList<String>

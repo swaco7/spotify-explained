@@ -20,7 +20,7 @@
     <item
         android:id="@+id/navigation_recommended_songs"
         android:icon="@drawable/spotify_icon"
-        android:title="Spotify" />
+        android:title="@string/spotify" />
 
     <item
         android:id="@+id/navigation_playlist"

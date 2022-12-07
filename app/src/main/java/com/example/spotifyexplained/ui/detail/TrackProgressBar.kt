@@ -1,7 +1,6 @@
 package com.example.spotifyexplained.ui.detail
 
 import android.os.Handler
-import android.util.Log
 import android.widget.SeekBar
 
 /**

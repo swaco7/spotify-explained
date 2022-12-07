@@ -1,6 +1,5 @@
 package com.example.spotifyexplained.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -32,7 +31,6 @@ class TopFeaturesHomeAdapter(var items: List<AudioFeature>) : RecyclerView.Adapt
         fun bind(item: AudioFeature) {
             binding.name = item.name
             binding.value = String.format("%.2f", item.value)
-            Log.e("genres", items.toString())
             binding.executePendingBindings()
         }
     }

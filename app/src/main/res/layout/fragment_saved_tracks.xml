@@ -3,10 +3,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <data>
-        <import type="com.example.spotifyexplained.model.VisualState"/>
-        <import type="com.example.spotifyexplained.model.LoadingState"/>
-        <import type="com.example.spotifyexplained.model.ZoomType"/>
-        <import type="com.example.spotifyexplained.model.DetailVisibleType"/>
+        <import type="com.example.spotifyexplained.model.enums.VisualState"/>
+        <import type="com.example.spotifyexplained.model.enums.LoadingState"/>
+        <import type="com.example.spotifyexplained.model.enums.ZoomType"/>
+        <import type="com.example.spotifyexplained.model.enums.DetailVisibleType"/>
         <import type="android.view.View" />
         <variable
             name="viewModel"
@@ -19,7 +19,7 @@
             type="com.example.spotifyexplained.general.GraphClickHandler"/>
         <variable
             name="zoomType"
-            type="com.example.spotifyexplained.model.ZoomType" />
+            type="com.example.spotifyexplained.model.enums.ZoomType" />
         <variable
             name="settings"
             type="com.example.spotifyexplained.model.GraphSettings" />

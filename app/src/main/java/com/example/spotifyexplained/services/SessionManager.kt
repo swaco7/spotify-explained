@@ -8,7 +8,6 @@ import com.example.spotifyexplained.R
 import com.example.spotifyexplained.general.App
 
 
-
 object SessionManager {
     private var prefs: SharedPreferences = App.context.getSharedPreferences(App.context.getString(R.string.app_name), Context.MODE_PRIVATE)
     private const val TOKEN = "token"
@@ -44,7 +43,6 @@ object SessionManager {
     }
 
     fun fetchToken(): String? {
-        //Log.e("token", prefs.getString(TOKEN, null)!!)
         return prefs.getString(TOKEN, null)
     }
 
@@ -56,8 +54,7 @@ object SessionManager {
     }
 
     fun tokenExpired(): Boolean {
-        Log.e("isInternet", ((prefs.getLong(EXPIRES_AT, 0) - System.currentTimeMillis())/1000).toString())
+        Log.e("remaining for token", ((prefs.getLong(EXPIRES_AT, 0) - System.currentTimeMillis())/1000).toString())
         return prefs.getLong(EXPIRES_AT, 0) < System.currentTimeMillis()
     }
-
 }

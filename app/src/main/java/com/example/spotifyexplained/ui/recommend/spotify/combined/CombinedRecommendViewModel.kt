@@ -6,14 +6,15 @@ import android.util.Log
 import androidx.lifecycle.*
 import com.example.spotifyexplained.activity.MainActivity
 import com.example.spotifyexplained.database.CombinedRecommendEntity
+import com.example.spotifyexplained.general.Config
+import com.example.spotifyexplained.general.GraphInfoHelper
 import com.example.spotifyexplained.general.Helper
 import com.example.spotifyexplained.general.VisualTabClickHandler
 import com.example.spotifyexplained.model.*
+import com.example.spotifyexplained.model.enums.*
 import com.example.spotifyexplained.services.ApiHelper
 import com.example.spotifyexplained.repository.TrackRepository
-import com.example.spotifyexplained.services.SessionManager
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
@@ -37,74 +38,58 @@ class CombinedRecommendViewModel(activity: Activity, private val repository: Tra
     val artistName = MutableLiveData<String>().apply { value = "" }
     val trackName = MutableLiveData<String>().apply { value = "" }
     val imageUrl = MutableLiveData<String>().apply { value = "" }
-    val settings = MutableLiveData<GraphSettings>().apply { value = GraphSettings(
-        artistsSelected = false,
-        relatedFlag = false,
-        genresFlag = true,
-        featuresFlag = true,
-        zoomFlag = true
-    ) }
+    val settings = MutableLiveData<GraphSettings>().apply { value = Config.graphSettings }
 
-    val nodes: MutableLiveData<ArrayList<D3Node>> by lazy {
-        MutableLiveData<ArrayList<D3Node>>(arrayListOf())
+    val nodes: MutableLiveData<ArrayList<D3ForceNode>> by lazy {
+        MutableLiveData<ArrayList<D3ForceNode>>(arrayListOf())
     }
-    val links: MutableLiveData<ArrayList<D3Link>> by lazy {
-        MutableLiveData<ArrayList<D3Link>>(arrayListOf())
+    val links: MutableLiveData<ArrayList<D3ForceLink>> by lazy {
+        MutableLiveData<ArrayList<D3ForceLink>>(arrayListOf())
     }
+    val availableGenres: MutableLiveData<List<String>> by lazy {
+        MutableLiveData<List<String>>(listOf())
+    }
+    var genreColorMap: HashMap<String, MixableColor> = HashMap()
+    val metricNodes: MutableLiveData<ArrayList<D3ForceNode>> by lazy {
+        MutableLiveData<ArrayList<D3ForceNode>>(arrayListOf())
+    }
+    val metricLinks: MutableLiveData<ArrayList<D3ForceLink>> by lazy {
+        MutableLiveData<ArrayList<D3ForceLink>>(arrayListOf())
+    }
+    val metricIndex = MutableLiveData<Int>().apply { value = 0 }
+
     val allGraphArtistNodes = MutableLiveData<MutableList<Artist>>().apply{ mutableListOf<Artist>() }
     val allGraphTrackNodes = MutableLiveData<MutableList<TrackAudioFeatures>>().apply{ mutableListOf<TrackAudioFeatures>() }
-
     val topTracks: MutableLiveData<List<TrackAudioFeatures>> by lazy { MutableLiveData<List<TrackAudioFeatures>>(mutableListOf()) }
-    val topArtists: MutableLiveData<MutableList<Artist>> by lazy {
-        MutableLiveData<MutableList<Artist>>(
-            mutableListOf()
-        )
-    }
+    val topArtists: MutableLiveData<List<Artist>> by lazy { MutableLiveData<List<Artist>>(mutableListOf()) }
     val selectedIds: MutableLiveData<MutableList<Pair<RecommendSeedType, String>>> by lazy {
         MutableLiveData<MutableList<Pair<RecommendSeedType, String>>>(
             mutableListOf()
         )
     }
-    private val recommendedTracks: MutableLiveData<List<Track>> by lazy {
-        MutableLiveData<List<Track>>(
-            arrayListOf()
-        )
-    }
-    private val recommendedTracksFeatures: MutableLiveData<List<TrackAudioFeatures>> by lazy {
-        MutableLiveData<List<TrackAudioFeatures>>(arrayListOf())
-    }
-    val availableGenres: MutableLiveData<List<String>> by lazy {
-        MutableLiveData<List<String>>(
-            listOf()
-        )
-    }
-    var genreColorMap: HashMap<String, MixableColor> = HashMap()
-    private val tracksFromDatabaseFlow: Flow<MutableList<CombinedRecommendEntity>> =
-        repository.allCombinedTracks
-    val tracksFromDatabaseLiveData: LiveData<MutableList<CombinedRecommendEntity>> =
-        repository.allCombinedTracks.asLiveData()
+    val tracksFromDatabaseLiveData: LiveData<MutableList<CombinedRecommendEntity>> = repository.allCombinedTracks.asLiveData()
 
-    private fun insertTracksBasedOnCombined(tracks: List<Track>) = viewModelScope.launch {
-        repository.insertCombined(tracks.map { CombinedRecommendEntity(it.trackId, it) })
-    }
+    private lateinit var recommendedTracks: List<Track>
+    private lateinit var recommendedTracksFeatures: List<TrackAudioFeatures>
+    private val tracksFromDatabaseFlow: Flow<MutableList<CombinedRecommendEntity>> = repository.allCombinedTracks
 
     private val context: Context? by lazy {
         activity
     }
 
+    private fun insertTracksBasedOnCombined(tracks: List<Track>) = viewModelScope.launch {
+        repository.insertCombined(tracks.map { CombinedRecommendEntity(it.trackId, it) })
+    }
+
     init {
-        if (SessionManager.tokenExpired()) {
-            (activity as MainActivity).authorizeUser()
-        } else {
-            viewModelScope.launch {
-                topArtists.value = (context as MainActivity).viewModel.topArtists.value
-                topTracks.value = (context as MainActivity).viewModel.topTracks.value
-                getAvailableGenreSeeds()
-                loadingState.value = LoadingState.SETTINGS_LOADED
-                tracksFromDatabaseFlow.collect { trackEntities ->
-                    if (trackEntities.isNotEmpty()) {
-                        prepareGraph(trackEntities.map { it.track }.toMutableList())
-                    }
+        viewModelScope.launch {
+            topArtists.value = (context as MainActivity).viewModel.topArtists.value
+            topTracks.value = (context as MainActivity).viewModel.topTracks.value
+            getAvailableGenreSeeds()
+            loadingState.value = LoadingState.SETTINGS_LOADED
+            tracksFromDatabaseFlow.collect { trackEntities ->
+                if (trackEntities.isNotEmpty()) {
+                    prepareGraph(trackEntities.map { it.track }.toMutableList())
                 }
             }
         }
@@ -113,22 +98,18 @@ class CombinedRecommendViewModel(activity: Activity, private val repository: Tra
      * Prepares full recommended tracks data
      */
     fun reload() {
-        if (SessionManager.tokenExpired()) {
-            (context as MainActivity).authorizeUser()
-        } else {
-            viewModelScope.launch {
-                loadingState.value = LoadingState.LOADING
-                topArtists.value = (context as MainActivity).viewModel.topArtists.value
-                topTracks.value = (context as MainActivity).viewModel.topTracks.value
-                Log.e("prepare", "--- Reload ---")
-                recommendBasedOnTracks()
-                recommendTracksGetFeatures()
-                getAvailableGenreSeeds()
-                getRecommendedTracksArtistGenres()
-                getRecommendedTracksRelatedArtists()
-                saveRecommendedTracksToDatabase()
-                loadingState.value = LoadingState.SUCCESS
-            }
+        viewModelScope.launch {
+            loadingState.value = LoadingState.LOADING
+            topArtists.value = (context as MainActivity).viewModel.topArtists.value
+            topTracks.value = (context as MainActivity).viewModel.topTracks.value
+            Log.e("prepare", "--- Reload ---")
+            recommendBasedOnTracks()
+            recommendTracksGetFeatures()
+            getAvailableGenreSeeds()
+            getRecommendedTracksArtistGenres()
+            getRecommendedTracksRelatedArtists()
+            saveRecommendedTracksToDatabase()
+            loadingState.value = LoadingState.SUCCESS
         }
     }
 
@@ -155,18 +136,14 @@ class CombinedRecommendViewModel(activity: Activity, private val repository: Tra
      * @param [tracks] tracks for graph generation
      */
     private fun prepareGraph(tracks: List<Track>) {
-        if (SessionManager.tokenExpired()) {
-            (context as MainActivity).authorizeUser()
-        } else {
-            viewModelScope.launch {
-                loadingState.value = LoadingState.LOADING
-                recommendedTracks.value = tracks
-                recommendTracksGetFeatures()
-                topArtists.value = (context as MainActivity).viewModel.topArtists.value
-                Log.e("prepare", "--- Prepare Nodes and Edges ---")
-                prepareNodesAndEdges()
-                loadingState.value = LoadingState.SUCCESS
-            }
+        viewModelScope.launch {
+            loadingState.value = LoadingState.LOADING
+            recommendedTracks = tracks
+            recommendTracksGetFeatures()
+            topArtists.value = (context as MainActivity).viewModel.topArtists.value
+            Log.e("prepare", "--- Prepare Nodes and Edges ---")
+            prepareNodesAndEdges()
+            loadingState.value = LoadingState.SUCCESS
         }
     }
     /**
@@ -174,26 +151,25 @@ class CombinedRecommendViewModel(activity: Activity, private val repository: Tra
      */
     private suspend fun recommendTracksGetFeatures() {
         val response =
-            ApiHelper.getTracksAudioFeatures(recommendedTracks.value!!)
+            ApiHelper.getTracksAudioFeatures(recommendedTracks, context!!)
                 ?: return
-        recommendedTracksFeatures.value = response.toMutableList()
+        recommendedTracksFeatures = response.toMutableList()
     }
 
     /**
      * Assigns artist data to each recommended track
      */
     private suspend fun getRecommendedTracksArtistGenres() {
-        val chunkedTracks = recommendedTracks.value!!.chunked(50)
+        val chunkedTracks = recommendedTracks.chunked(50)
         var offset = 0
         for (chunk in chunkedTracks) {
-            val response = ApiHelper.getArtistWithGenres(chunk.toMutableList()) ?: return
+            val response = ApiHelper.getArtistWithGenres(chunk.toMutableList(), context!!) ?: return
             for (i in response.artists.indices) {
                 val index = i + offset
-                recommendedTracks.value!![index].trackGenres = response.artists[i].genres
-                recommendedTracks.value!![index].artists[0].genres = response.artists[i].genres
-                recommendedTracks.value!![index].artists[0].artistPopularity =
-                    response.artists[i].artistPopularity
-                recommendedTracks.value!![index].artists[0].images = response.artists[i].images
+                recommendedTracks[index].trackGenres = response.artists[i].genres
+                recommendedTracks[index].artists[0].genres = response.artists[i].genres
+                recommendedTracks[index].artists[0].artistPopularity = response.artists[i].artistPopularity
+                recommendedTracks[index].artists[0].images = response.artists[i].images
             }
             offset += response.artists.size
         }
@@ -204,16 +180,16 @@ class CombinedRecommendViewModel(activity: Activity, private val repository: Tra
      */
     private suspend fun prepareNodesAndEdges(){
         val forceGraph : ForceGraph = if (settings.value!!.artistsSelected){
-            Helper.prepareGraphArtists(settings.value!!, recommendedTracks.value!!, topArtists.value!!)
+            Helper.prepareGraphArtists(settings.value!!, recommendedTracks, topArtists.value!!, context!!)
         } else {
-            Helper.prepareGraphTracks(settings.value!!, recommendedTracksFeatures.value!!, topTracks.value!!.toMutableList())
+            Helper.prepareGraphTracks(settings.value!!, recommendedTracksFeatures, topTracks.value!!.toMutableList(), context!!)
         }
         nodes.value = forceGraph.nodes
         genreColorMap = forceGraph.genreColorMap
         allGraphArtistNodes.value = forceGraph.nodeArtists.toMutableList()
         if (!settings.value!!.artistsSelected) {
             allGraphTrackNodes.value =
-                ApiHelper.getTracksAudioFeatures(forceGraph.nodeTracks)?.toMutableList() ?: return
+                ApiHelper.getTracksAudioFeatures(forceGraph.nodeTracks, context!!)?.toMutableList() ?: return
         }
         links.value = forceGraph.links
     }
@@ -222,23 +198,23 @@ class CombinedRecommendViewModel(activity: Activity, private val repository: Tra
      * Assigns related artist to each recommended track's artist
      */
     private suspend fun getRecommendedTracksRelatedArtists() {
-        for (track in recommendedTracks.value!!) {
+        for (track in recommendedTracks) {
             val trackArtist = (context as MainActivity).viewModel.topArtists.value!!.firstOrNull { it.artistId == track.artists[0].artistId }
             track.artists[0].related_artists = trackArtist?.related_artists
-                ?: (ApiHelper.getRelatedArtists(track.artists[0].artistId)?.toList()
+                ?: (ApiHelper.getRelatedArtists(track.artists[0].artistId, context!!)?.toList()
                     ?: mutableListOf())
         }
     }
 
     private suspend fun getAvailableGenreSeeds() {
-        val availableGenreSeeds = ApiHelper.getAvailableGenreSeeds() ?: GenreSeeds(arrayOf())
+        val availableGenreSeeds = ApiHelper.getAvailableGenreSeeds(context!!) ?: GenreSeeds(arrayOf())
         availableGenres.value = availableGenreSeeds.seeds.toList()
     }
     /**
      * Calls repository to save tracks to database
      */
     private fun saveRecommendedTracksToDatabase() {
-        insertTracksBasedOnCombined(recommendedTracks.value!!)
+        insertTracksBasedOnCombined(recommendedTracks)
     }
     /**
      *  Gets recommended tracks
@@ -247,10 +223,10 @@ class CombinedRecommendViewModel(activity: Activity, private val repository: Tra
         val seedsChunked = selectedIds.value!!.chunked(5).toMutableList()
         val allRecommendedTracks = mutableListOf<Track>()
         for (chunk in seedsChunked) {
-            val response = ApiHelper.getRecommendsCombined(chunk.toMutableList()) ?: return
+            val response = ApiHelper.getRecommendsCombined(chunk.toMutableList(), context!!) ?: return
             allRecommendedTracks.addAll(response.tracks)
         }
-        recommendedTracks.value = allRecommendedTracks.distinct()
+        recommendedTracks = allRecommendedTracks.distinct()
     }
 
     /**
@@ -288,7 +264,7 @@ class CombinedRecommendViewModel(activity: Activity, private val repository: Tra
     fun showBundleDetailInfo(nodeIndices: String, currentIndex: String): MutableList<BundleGraphItem> {
         detailViewVisible.value = true
         detailVisibleType.value = DetailVisibleType.BUNDLE
-        return Helper.showBundleDetailInfo(nodeIndices, currentIndex, allGraphArtistNodes.value!!, allGraphTrackNodes.value!!.map { it.track }, recommendedTracks.value!!, genreColorMap)
+        return GraphInfoHelper.showBundleDetailInfo(nodeIndices, currentIndex, allGraphArtistNodes.value!!, allGraphTrackNodes.value!!.map { it.track }, recommendedTracks, genreColorMap)
     }
     /**
      * Prepares data for line detail window
@@ -298,22 +274,22 @@ class CombinedRecommendViewModel(activity: Activity, private val repository: Tra
         detailViewVisible.value = true
         when (nodeIndices!!.split(",").last()) {
             "RELATED" -> {
-                lineInfo.value = Helper.showLineDetailInfo(nodeIndices, allGraphArtistNodes.value!!, allGraphTrackNodes.value!!.map { it.track })
+                lineInfo.value = GraphInfoHelper.showLineDetailInfo(nodeIndices, allGraphArtistNodes.value!!, allGraphTrackNodes.value!!.map { it.track })
                 detailVisibleType.value = DetailVisibleType.LINE
             }
             "GENRE" -> {
-                lineGenreInfo.value = Helper.showLineDetailGenreInfo(nodeIndices, allGraphArtistNodes.value!!, allGraphTrackNodes.value!!.map { it.track })
+                lineGenreInfo.value = GraphInfoHelper.showLineDetailGenreInfo(nodeIndices, allGraphArtistNodes.value!!, allGraphTrackNodes.value!!.map { it.track })
                 detailVisibleType.value = DetailVisibleType.LINEGENRE
             }
             "FEATURE" -> {
-                lineFeaturesInfo.value = Helper.showLineDetailFeatureInfo(nodeIndices, allGraphTrackNodes.value!!)
+                lineFeaturesInfo.value = GraphInfoHelper.showLineDetailFeatureInfo(nodeIndices, allGraphTrackNodes.value!!)
                 detailVisibleType.value = DetailVisibleType.LINEFEATURE
             }
             "BUNDLE" -> {
                 lineBundleInfo.value = if (settings.value!!.artistsSelected) {
-                    Helper.showBundleLineInfoArtists(nodeIndices, allGraphArtistNodes.value!!, genreColorMap)
+                    GraphInfoHelper.showBundleLineInfoArtists(nodeIndices, allGraphArtistNodes.value!!, genreColorMap)
                 } else {
-                    Helper.showBundleLineInfoTracks(nodeIndices, allGraphTrackNodes.value!!, genreColorMap)
+                    GraphInfoHelper.showBundleLineInfoTracks(nodeIndices, allGraphTrackNodes.value!!, genreColorMap)
                 }
                 detailVisibleType.value = DetailVisibleType.LINEBUNDLE
             }
@@ -338,10 +314,22 @@ class CombinedRecommendViewModel(activity: Activity, private val repository: Tra
         visualState.value = VisualState.SETTINGS
     }
 
+    fun settingsChanged(type : SettingsItemType){
+        val currentSettings = settings.value!!
+        when (type) {
+            SettingsItemType.TRACK -> currentSettings.artistsSelected = !currentSettings.artistsSelected
+            SettingsItemType.RELATED -> currentSettings.relatedFlag = !currentSettings.relatedFlag
+            SettingsItemType.GENRE -> currentSettings.genresFlag = !currentSettings.genresFlag
+            SettingsItemType.FEATURE -> currentSettings.featuresFlag = !currentSettings.featuresFlag
+        }
+        settings.value = currentSettings
+        drawGraph()
+    }
+
     /**
      *  Unused functions for graph generation for experiment
      * **/
-    private fun trimArtists(
+    private fun trimNodes(
         nodeArtists: List<Artist>,
         edgesList: MutableList<Pair<Artist, Artist>>
     ): List<Artist> {
@@ -362,5 +350,27 @@ class CombinedRecommendViewModel(activity: Activity, private val repository: Tra
         val result =
             edgesList.filter { nodeArtists.contains(it.first) && nodeArtists.contains(it.second) }
         return result.toMutableList()
+    }
+
+    fun prepareNodesAndEdgesForMetrics(){
+        viewModelScope.launch {
+            val forceGraph: ForceGraph = if (settings.value!!.artistsSelected) {
+                Helper.prepareGraphArtists(
+                    settings.value!!,
+                    recommendedTracks,
+                    topArtists.value!!,
+                    context!!
+                )
+            } else {
+                Helper.prepareGraphTracks(
+                    settings.value!!,
+                    recommendedTracksFeatures,
+                    topTracks.value!!.toMutableList(),
+                    context!!
+                )
+            }
+            metricNodes.value = forceGraph.nodes
+            metricLinks.value = forceGraph.links
+        }
     }
 }

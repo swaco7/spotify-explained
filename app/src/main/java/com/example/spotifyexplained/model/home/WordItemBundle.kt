@@ -1,9 +1,5 @@
 package com.example.spotifyexplained.model.home
 
-import android.text.Html
-import com.google.gson.annotations.SerializedName
-import com.highsoft.highcharts.common.hichartsclasses.HIMarker
-
 data class WordItemBundle(
     var title: String,
     var content: MutableList<WordItem>)

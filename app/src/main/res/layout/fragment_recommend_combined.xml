@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
     <data>
-        <import type="com.example.spotifyexplained.model.VisualState"/>
-        <import type="com.example.spotifyexplained.model.LoadingState"/>
-        <import type="com.example.spotifyexplained.model.ZoomType"/>
-        <import type="com.example.spotifyexplained.model.DetailVisibleType"/>
+        <import type="com.example.spotifyexplained.model.enums.VisualState"/>
+        <import type="com.example.spotifyexplained.model.enums.LoadingState"/>
+        <import type="com.example.spotifyexplained.model.enums.ZoomType"/>
+        <import type="com.example.spotifyexplained.model.enums.DetailVisibleType"/>
+        <import type="com.example.spotifyexplained.general.Config"/>
         <import type="android.view.View" />
         <import type="com.example.spotifyexplained.ui.recommend.spotify.combined.CombinedRecommendViewModel" />
         <variable
@@ -18,7 +19,7 @@
             type="com.example.spotifyexplained.general.GraphClickHandler"/>
         <variable
             name="zoomType"
-            type="com.example.spotifyexplained.model.ZoomType" />
+            type="com.example.spotifyexplained.model.enums.ZoomType" />
         <variable
             name="itemSelected"
             type="Boolean"/>
@@ -49,7 +50,18 @@
                 android:layout_marginStart="5dp"
                 android:src="@drawable/search_48px" />
 
+            <ImageView
+                android:id="@+id/metrics_button"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="5dp"
+                android:layout_toEndOf="@id/search_button"
+                android:visibility="@{Config.metricsMode ? View.VISIBLE : View.GONE}"
+                android:src="@drawable/favorite_heart_icon" />
+
             <LinearLayout
+                android:layout_toEndOf="@+id/metrics_button"
                 android:id="@+id/buttons_switch"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal"
