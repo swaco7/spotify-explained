@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.spotifyexplained.R
 import com.example.spotifyexplained.activity.MainActivity
 import com.example.spotifyexplained.adapter.*
-import com.example.spotifyexplained.database.TrackSpecificEntity
+import com.example.spotifyexplained.database.entity.TrackSpecificEntity
 import com.example.spotifyexplained.databinding.FragmentRecommendCustomSpecificBinding
 import com.example.spotifyexplained.general.*
 import com.example.spotifyexplained.model.*
@@ -25,7 +25,7 @@ import com.example.spotifyexplained.general.TrackDatabaseViewModelFactory
 import com.example.spotifyexplained.model.enums.BundleItemType
 import com.example.spotifyexplained.model.enums.LoadingState
 import com.example.spotifyexplained.model.enums.ZoomType
-import com.example.spotifyexplained.services.GraphHtmlBuilder
+import com.example.spotifyexplained.html.GraphHtmlBuilder
 import com.faltenreich.skeletonlayout.Skeleton
 import com.faltenreich.skeletonlayout.applySkeleton
 import java.util.*
@@ -125,13 +125,6 @@ class CustomRecommendSpecificFragment : Fragment(), TrackDetailClickHandler, Gra
         binding.root.findViewById<ImageView>(R.id.reload_button).setOnClickListener {
             adapter.submitList(null)
             viewModel.clearData()
-        }
-        val expandFunc =
-            { expanded: Boolean -> (context as MainActivity).viewModel.expanded.value = !expanded }
-        val mGestureDetector = GestureDetectorCompat(context, GestureListener(expandFunc))
-        binding.root.findViewById<RelativeLayout>(R.id.button_layout).setOnTouchListener { _, event ->
-            mGestureDetector.onTouchEvent(event)
-            true
         }
         viewModel.loadingState.observe(viewLifecycleOwner) {
             if (it == LoadingState.SUCCESS){
@@ -252,4 +245,6 @@ class CustomRecommendSpecificFragment : Fragment(), TrackDetailClickHandler, Gra
     override fun onCloseBundleClick() {
         hideDetailInfo()
     }
+
+
 }

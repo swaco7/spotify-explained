@@ -8,8 +8,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.spotifyexplained.R
 import com.example.spotifyexplained.activity.MainActivity
-import com.example.spotifyexplained.database.RandomTrackEntity
-import com.example.spotifyexplained.database.UserArtistEntity
+import com.example.spotifyexplained.database.entity.RandomTrackEntity
+import com.example.spotifyexplained.database.entity.UserArtistEntity
 import com.example.spotifyexplained.general.Config
 import com.example.spotifyexplained.general.Helper
 import com.example.spotifyexplained.model.*
@@ -18,13 +18,14 @@ import com.example.spotifyexplained.model.enums.LoadingState
 import com.example.spotifyexplained.model.enums.VisualState
 import com.example.spotifyexplained.model.home.*
 import com.example.spotifyexplained.repository.TrackRepository
-import com.example.spotifyexplained.services.ApiHelper
+import com.example.spotifyexplained.services.ApiRepository
 import com.example.spotifyexplained.services.SessionManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import kotlin.math.max
 import kotlin.math.min
 
 class HomeViewModel(activity: Activity, private val repository: TrackRepository) : ViewModel() {
@@ -38,7 +39,7 @@ class HomeViewModel(activity: Activity, private val repository: TrackRepository)
         value = VisualState.TABLE
     }
     val userName = MutableLiveData<String>().apply {
-        value = SessionManager.getUserId()
+        value = ""
     }
 
     private lateinit var topGenres : List<StatsSectionItem>
@@ -86,9 +87,11 @@ class HomeViewModel(activity: Activity, private val repository: TrackRepository)
                     (context as MainActivity).viewModel.topArtists.value = topArtists
                     (context as MainActivity).viewModel.topTracks.value = topTracksWithFeatures
                 }
+
                 getGeneralSet()
-                getTopGenresSeeds()
+                topGenres = getTopGenresSeeds()
                 prepareSections()
+                userName.value = getUserName()
                 loadingState.value = LoadingState.SUCCESS
             }
         }
@@ -119,19 +122,23 @@ class HomeViewModel(activity: Activity, private val repository: TrackRepository)
         }
     }
 
+    private suspend fun getUserName(): String {
+        return ApiRepository.getProfile(context!!)?.display_name ?: ""
+    }
+
     /**
      * Gather most incident genre seeds in user's top artist
      */
-    private fun getTopGenresSeeds(){
+    private fun getTopGenresSeeds(): kotlin.collections.ArrayList<StatsSectionItem>{
         val genreMap = HashMap<String,Int>()
         for (artist in topArtists){
-            for (genre in artist.genres!!) {
+            for (genre in artist.genres ?: arrayOf()) {
                 genreMap[genre] = if (genreMap.containsKey(genre)) genreMap.getValue(genre) + 1 else 1
             }
         }
         val sortedGenres = ArrayList<StatsSectionItem>()
         genreMap.entries.sortedByDescending{it.value}.forEach{sortedGenres.add(StatsSectionItem(name = it.key, value = (it.value.toDouble() / topArtists.size)*100))}
-        topGenres = sortedGenres
+        return sortedGenres
     }
 
     /**
@@ -203,7 +210,7 @@ class HomeViewModel(activity: Activity, private val repository: TrackRepository)
      */
     private fun getMostPopularArtists(): List<StatsSectionItem> {
         return topArtists.sortedByDescending { it.artistPopularity }.map {
-            StatsSectionItem(name = it.artistName, value = it.artistPopularity!!.toDouble(), imageUrl = it.images!![0].url)
+            StatsSectionItem(name = it.artistName, value = it.artistPopularity?.toDouble() ?: 0.0, imageUrl = if (it.images != null && it.images!!.isNotEmpty()) it.images!![0].url else "")
         }
     }
 
@@ -212,7 +219,7 @@ class HomeViewModel(activity: Activity, private val repository: TrackRepository)
      */
     private fun getLeastPopularArtists() : List<StatsSectionItem>  {
         return topArtists.sortedBy { it.artistPopularity }.map {
-            StatsSectionItem(name = it.artistName, value = it.artistPopularity!!.toDouble(), imageUrl = it.images!![0].url)
+            StatsSectionItem(name = it.artistName, value = it.artistPopularity?.toDouble() ?: 0.0, imageUrl = if (it.images != null && it.images!!.isNotEmpty()) it.images!![0].url else "")
         }.filter { it.value > 0 }.toMutableList()
     }
 
@@ -223,9 +230,9 @@ class HomeViewModel(activity: Activity, private val repository: TrackRepository)
         for (index in 0 until 10){
             val randomChar = Helper.random.nextInt(0, charPool.size)
             val offset = Helper.random.nextInt(0, 100)
-            generalTracks.addAll(ApiHelper.getSearchTracks("%${charPool[randomChar]}%",  limit = 2, offset = offset, "track", context!!) ?: mutableListOf())
+            generalTracks.addAll(ApiRepository.getSearchTracks("%${charPool[randomChar]}%",  limit = 2, offset = offset, "track", context!!) ?: mutableListOf())
         }
-        val generalWithFeatures = ApiHelper.getTracksAudioFeatures(generalTracks, context!!)
+        val generalWithFeatures = ApiRepository.getTracksAudioFeatures(generalTracks, context!!)
         if (generalWithFeatures != null) {
             insertRandomTracks(generalWithFeatures.toMutableList())
             generalSetTracksWithFeatures = generalWithFeatures.toMutableList()
@@ -239,22 +246,26 @@ class HomeViewModel(activity: Activity, private val repository: TrackRepository)
     private fun prepareSections() {
         Log.e("prepare", "here")
         val pagesList = mutableListOf<PageItem>()
-        pagesList.add(PageItem("Our recommendations", context!!.getString(R.string.home_our_recommend_content), PageType.RECOMMEND))
-        pagesList.add(PageItem("Your music", context!!.getString(R.string.home_your_music_content), PageType.USERTOP))
-        pagesList.add(PageItem("Spotify recommend", context!!.getString(R.string.home_spotify_recommend_content), PageType.SPOTIFY))
-        pagesList.add(PageItem("Playlist creation", context!!.getString(R.string.home_playlist_creation), PageType.PLAYLIST))
+        pagesList.add(PageItem(context!!.getString(R.string.our_recommendations), context!!.getString(R.string.home_our_recommend_content), PageType.RECOMMEND))
+        pagesList.add(PageItem(context!!.getString(R.string.your_music), context!!.getString(R.string.home_your_music_content), PageType.USERTOP))
+        pagesList.add(PageItem(context!!.getString(R.string.spotify_recommend_text), context!!.getString(R.string.home_spotify_recommend_content), PageType.SPOTIFY))
+        pagesList.add(PageItem(context!!.getString(R.string.playlist_creation), context!!.getString(R.string.home_playlist_creation), PageType.PLAYLIST))
 
         val wordBundles = mutableListOf<WordItemBundle>()
-        wordBundles.add(WordItemBundle("Top genres", topGenres.map { WordItem(it.name, (it.value*1.25).toInt() + 8) }.toMutableList()))
-        wordBundles.add(WordItemBundle("Top artists", topArtists.map { WordItem(it.artistName, (it.artistPopularity!!*0.2).toInt() + 2) }.toMutableList()))
+        wordBundles.add(WordItemBundle(context!!.getString(R.string.top_genres_lc), topGenres.map { WordItem(it.name, min((it.value*1.25).toInt() + 8, 28)) }.toMutableList()))
+        wordBundles.add(WordItemBundle(context!!.getString(R.string.top_artists), topArtists.map { WordItem(it.artistName, ((it.artistPopularity ?: 1)*0.3).toInt() + 2) }.toMutableList()))
 
         val statsSectionList = mutableListOf<StatsSection>()
-        statsSectionList.add(StatsSection(StatsSectionType.MOSTPOP, getMostPopularTracks(), "Tracks", "Popularity of track calculated by Spotify"))
-        statsSectionList.add(StatsSection(StatsSectionType.MOSTPOP, getMostPopularArtists(), "Artists", "Popularity of artist, calculated from popularity of artist's tracks by Spotify"))
+        statsSectionList.add(StatsSection(StatsSectionType.MOSTPOP, getMostPopularTracks(), context!!.getString(
+                    R.string.tracks_home_dropdown), "Popularity of track calculated by Spotify"))
+        statsSectionList.add(StatsSection(StatsSectionType.MOSTPOP, getMostPopularArtists(), context!!.getString(
+                    R.string.artists_home_dropdown), "Popularity of artist, calculated from popularity of artist's tracks by Spotify"))
 
         val statsSectionList2 = mutableListOf<StatsSection>()
-        statsSectionList2.add(StatsSection(StatsSectionType.LEASTPOP, getLeastPopularTracks(), "Tracks", "Popularity of track calculated by Spotify"))
-        statsSectionList2.add(StatsSection(StatsSectionType.LEASTPOP, getLeastPopularArtists(), "Artists", "Popularity of artist, calculated from popularity of artist's tracks by Spotify"))
+        statsSectionList2.add(StatsSection(StatsSectionType.LEASTPOP, getLeastPopularTracks(), context!!.getString(
+            R.string.tracks_home_dropdown), "Popularity of track calculated by Spotify"))
+        statsSectionList2.add(StatsSection(StatsSectionType.LEASTPOP, getLeastPopularArtists(), context!!.getString(
+            R.string.artists_home_dropdown), "Popularity of artist, calculated from popularity of artist's tracks by Spotify"))
 
         val statsSectionList3 = mutableListOf<StatsSection>()
         statsSectionList3.add(StatsSection(StatsSectionType.GENRE, topGenres, "Genres", "Occurrence of genre in user's music"))
@@ -274,33 +285,33 @@ class HomeViewModel(activity: Activity, private val repository: TrackRepository)
      * Gathers user's top tracks from Spotify topTracks and savedTracks
      */
     private suspend fun getUserTopTracks(){
-        val topTracksList = ApiHelper.getUserTopTracks(Config.topItemsLimit, context as MainActivity) ?: mutableListOf()
+        val topTracksList = ApiRepository.getUserTopTracks(Config.topItemsLimit, context as MainActivity) ?: mutableListOf()
         val sizeDifference = Config.topItemsLimit - topTracksList.size
         if (sizeDifference > 0) {
-            val savedTracks = ApiHelper.getUserSavedTracks(Config.savedTracksLimit, context!!) ?: mutableListOf()
+            val savedTracks = ApiRepository.getUserSavedTracks(Config.savedTracksLimit, context!!) ?: mutableListOf()
             val savedTracksNew = savedTracks.filter { !topTracksList.contains(it) }
             val savedTracksFinal = savedTracksNew.take(min(sizeDifference, savedTracksNew.size))
             topTracksList.addAll(savedTracksFinal)
         }
         val userTracks = topTracksList.toMutableList()
-        topTracksWithFeatures = ApiHelper.getTracksAudioFeatures(userTracks, context!!)?.toMutableList() ?: listOf()
+        topTracksWithFeatures = ApiRepository.getTracksAudioFeatures(userTracks, context!!)?.toMutableList() ?: listOf()
     }
 
     /**
      * Gathers user's top artists from Spotify topArtists and savedTracks
      */
     private suspend fun getUserTopArtists() {
-        val topArtistsList = ApiHelper.getUserTopArtists(Config.topItemsLimit, context!!) ?: mutableListOf()
+        val topArtistsList = ApiRepository.getUserTopArtists(Config.topItemsLimit, context!!) ?: mutableListOf()
         val sizeDifference = Config.topItemsLimit - topArtistsList.size
         if (sizeDifference > 0) {
-            val savedTracks = ApiHelper.getUserSavedTracks(Config.savedTracksLimit, context!!) ?: mutableListOf()
+            val savedTracks = ApiRepository.getUserSavedTracks(Config.savedTracksLimit, context!!) ?: mutableListOf()
             val savedArtists = savedTracks.map { it.artists[0] }.filter { !topArtistsList.contains(it) }
             val frequencyMap = mutableMapOf<Artist, Int>()
             for (artist in savedArtists.distinct()) {
                 frequencyMap[artist] = Collections.frequency(savedArtists, artist)
             }
             val sortedArtists = frequencyMap.toList().sortedBy { (_, value) -> value }.map { it.first }
-            val sortedArtistsFinal = ApiHelper.getArtistsDetail(
+            val sortedArtistsFinal = ApiRepository.getArtistsDetail(
                 sortedArtists.take(
                     min(
                         sizeDifference,
@@ -319,7 +330,7 @@ class HomeViewModel(activity: Activity, private val repository: TrackRepository)
      */
     private suspend fun getUsersArtistsRelatedArtist() {
         for (artist in topArtists) {
-            val relatedArtists = ApiHelper.getRelatedArtists(artist.artistId, context!!)
+            val relatedArtists = ApiRepository.getRelatedArtists(artist.artistId, context!!)
             topArtists[topArtists.indexOf(artist)].related_artists = relatedArtists?.toList() ?: mutableListOf()
         }
     }
@@ -329,15 +340,15 @@ class HomeViewModel(activity: Activity, private val repository: TrackRepository)
      */
     private suspend fun getTracksRelatedArtists() {
         for (track in topTracksWithFeatures) {
-            var trackArtist = (context as MainActivity).viewModel.topArtists.value!!.firstOrNull { it.artistId == track.track.artists[0].artistId }
+            var trackArtist = (context as MainActivity).viewModel.topArtists.value?.firstOrNull { it.artistId == track.track.artists[0].artistId }
             if (trackArtist == null) {
                 trackArtist = topTracksWithFeatures.firstOrNull { it.track.artists[0].artistId == track.track.artists[0].artistId }?.track?.artists?.get(0)
             }
             track.track.artists[0].related_artists = trackArtist?.related_artists
-                ?: (ApiHelper.getRelatedArtists(track.track.artists[0].artistId, context!!)
+                ?: (ApiRepository.getRelatedArtists(track.track.artists[0].artistId, context!!)
                     ?.toList() ?: mutableListOf())
         }
-        val response = ApiHelper.getArtistWithGenres(topTracksWithFeatures.map { it.track }.toMutableList(), context!!) ?: return
+        val response = ApiRepository.getArtistWithGenres(topTracksWithFeatures.map { it.track }.toMutableList(), context!!) ?: return
         for (artistIndex in response.artists.indices) {
             topTracksWithFeatures[artistIndex].track.trackGenres = response.artists[artistIndex].genres
             topTracksWithFeatures[artistIndex].track.artists[0].genres = response.artists[artistIndex].genres

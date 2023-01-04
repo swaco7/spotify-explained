@@ -69,7 +69,7 @@ class HomeFragment : Fragment(), AdapterView.OnItemSelectedListener, TrackDetail
                 if (menuItem.itemId == R.id.logout_item) {
                     (context as MainActivity).logoutUser()
                     SessionManager.clearToken()
-                    AuthorizationClient.clearCookies(this.requireActivity())
+                    //AuthorizationClient.clearCookies(this.requireActivity())
                     (context as MainActivity).authorizeUser()
                 } else if (menuItem.itemId == R.id.clear_caches){
                     viewModel.clearCaches()

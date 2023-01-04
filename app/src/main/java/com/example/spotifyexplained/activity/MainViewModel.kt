@@ -11,54 +11,33 @@ import kotlinx.coroutines.Job
 
 
 class MainViewModel : ViewModel() {
-    val poolIsLoading = MutableLiveData<Boolean>().apply{
-        value = false
-    }
-    val loadingProgress = MutableLiveData<Int>().apply {
-        Log.e("loadingProgress", "-- init")
-        value = 0
-    }
-    val phase = MutableLiveData<Int>().apply {
-        value = 0
-    }
-    val progressText = MutableLiveData<String>().apply {
-        value = ""
-    }
-    val expanded = MutableLiveData<Boolean>().apply {
-        value = false
-    }
-    val tabVisible = MutableLiveData<Boolean>().apply {
-        value = true
-    }
-
-    val state = MutableLiveData<VisualState>().apply {
-        value = VisualState.TABLE
-    }
-    val loadingState = MutableLiveData<LoadingState>().apply {
-        value = LoadingState.LOADING
-    }
-
-    val connectionError = MutableLiveData<Boolean>().apply {
-        value = false
-    }
-
-    val authenticationPending = MutableLiveData<Boolean>().apply{
-        value = false
-    }
-
-    val topArtists: MutableLiveData<List<Artist>> by lazy {
-        MutableLiveData<List<Artist>>(listOf())
-    }
-
-    val topTracks: MutableLiveData<List<TrackAudioFeatures>> by lazy {
-        MutableLiveData<List<TrackAudioFeatures>>(listOf())
-    }
+    val poolIsLoading = MutableLiveData<Boolean>().apply{ value = false }
+    val loadingProgress = MutableLiveData<Int>().apply { value = 0 }
+    val phase = MutableLiveData<Int>().apply { value = 0 }
+    val progressText = MutableLiveData<String>().apply { value = "" }
+    val expanded = MutableLiveData<Boolean>().apply { value = false }
+    val tabVisible = MutableLiveData<Boolean>().apply { value = true }
+    val state = MutableLiveData<VisualState>().apply { value = VisualState.TABLE }
+    val loadingState = MutableLiveData<LoadingState>().apply { value = LoadingState.LOADING }
+    val connectionError = MutableLiveData<Boolean>().apply { value = false }
+    val accessError = MutableLiveData<Boolean>().apply { value = false }
+    val authenticationPending = MutableLiveData<Boolean>().apply{ value = false }
+    val topArtists: MutableLiveData<List<Artist>> by lazy { MutableLiveData<List<Artist>>(listOf())}
+    val topTracks: MutableLiveData<List<TrackAudioFeatures>> by lazy { MutableLiveData<List<TrackAudioFeatures>>(listOf()) }
 
     lateinit var job : Job
 
     fun showError(){
         if (!connectionError.value!!){
             connectionError.value = true
+        }
+    }
+
+    fun showAccessError(code: Int?){
+        if (code == 403) {
+            if (!accessError.value!!) {
+                accessError.value = true
+            }
         }
     }
 }

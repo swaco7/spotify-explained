@@ -79,6 +79,18 @@
             app:detailViewVisible="@{viewModel.detailViewVisible}"
             app:graphClickHandler="@{graphClickHandler}"/>
 
+        <include layout="@layout/reusable_color_info_layout"
+            app:detailVisibleType="@{viewModel.detailVisibleType}"
+            app:detailViewVisible="@{viewModel.detailViewVisible}"
+            app:graphClickHandler="@{graphClickHandler}"/>
+
+        <include layout="@layout/reusable_graph_buttons_layout"
+            android:layout_below="@+id/button_layout"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:visibility="@{viewModel.graphLoadingState == LoadingState.FAILURE &amp;&amp; viewModel.visualState == VisualState.GRAPH ? View.VISIBLE : View.GONE}">
+        </include>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="match_parent"

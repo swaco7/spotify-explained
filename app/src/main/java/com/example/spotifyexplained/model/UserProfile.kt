@@ -8,5 +8,8 @@ data class UserProfile(
 
     @SerializedName("uri")
     val uri: String,
+
+    @SerializedName("display_name")
+    val display_name: String
 )
 

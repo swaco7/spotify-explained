@@ -1,23 +1,49 @@
 package com.example.spotifyexplained.model
 
+import com.example.spotifyexplained.general.Config
 import com.example.spotifyexplained.model.enums.AudioFeatureType
 
-data class RadarChartData(val tracksWithFeatures: List<TrackAudioFeatures>, val minMax: List<Pair<Double, Double>>,  val averageValues: List<Double>? = null, val averageGeneralValues: List<Double>? = null) {
+data class RadarChartData(var tracksWithFeatures: List<TrackAudioFeatures>, val minMax: List<Pair<Double, Double>>,  val averageValues: List<Double>? = null, val averageGeneralValues: List<Double>? = null, var chosenIndex: Int = 0) {
     private lateinit var mapMinMax : MutableMap<Any, Pair<Double, Double>>
 
     override fun toString(): String {
         getMinMax()
         val builder = StringBuilder()
         builder.append("[\n")
-        for (trackWithFeatures in tracksWithFeatures) {
+        for (trackWithFeatures in tracksWithFeatures.dropLast(1)) {
             prepareItem(builder, trackWithFeatures.features)
         }
-        if (averageValues != null && averageValues.isNotEmpty()){
-            prepareItem(builder, AudioFeatures("average", averageValues))
+        when (chosenIndex){
+            Config.detailAllCount + 1 -> {
+                prepareItem(builder, tracksWithFeatures.last().features)
+                if (averageGeneralValues != null && averageGeneralValues.isNotEmpty()){
+                    prepareItem(builder, AudioFeatures("averageGeneral", averageGeneralValues))
+                }
+                if (averageValues != null && averageValues.isNotEmpty()){
+                    prepareItem(builder, AudioFeatures("average", averageValues))
+                }
+            }
+            Config.detailAllCount + 2 -> {
+                prepareItem(builder, tracksWithFeatures.last().features)
+                if (averageValues != null && averageValues.isNotEmpty()){
+                    prepareItem(builder, AudioFeatures("average", averageValues))
+                }
+                if (averageGeneralValues != null && averageGeneralValues.isNotEmpty()){
+                    prepareItem(builder, AudioFeatures("averageGeneral", averageGeneralValues))
+                }
+            }
+            else -> {
+                if (averageValues != null && averageValues.isNotEmpty()){
+                    prepareItem(builder, AudioFeatures("average", averageValues))
+                }
+                if (averageGeneralValues != null && averageGeneralValues.isNotEmpty()){
+                    prepareItem(builder, AudioFeatures("averageGeneral", averageGeneralValues))
+                }
+                prepareItem(builder, tracksWithFeatures.last().features)
+            }
         }
-        if (averageGeneralValues != null && averageGeneralValues.isNotEmpty()){
-            prepareItem(builder, AudioFeatures("averageGeneral", averageGeneralValues))
-        }
+
+
         builder.removeSuffix(",")
         builder.append("]\n")
         return builder.toString()

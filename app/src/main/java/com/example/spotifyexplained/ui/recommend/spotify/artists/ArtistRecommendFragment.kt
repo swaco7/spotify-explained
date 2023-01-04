@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.spotifyexplained.R
 import com.example.spotifyexplained.adapter.*
-import com.example.spotifyexplained.database.ArtistRecommendEntity
+import com.example.spotifyexplained.database.entity.ArtistRecommendEntity
 import com.example.spotifyexplained.general.*
 import com.example.spotifyexplained.model.*
 import com.example.spotifyexplained.general.Config.encoding
@@ -29,7 +29,7 @@ import com.example.spotifyexplained.model.enums.DetailVisibleType
 import com.example.spotifyexplained.model.enums.LoadingState
 import com.example.spotifyexplained.model.enums.SettingsItemType
 import com.example.spotifyexplained.model.enums.ZoomType
-import com.example.spotifyexplained.services.GraphHtmlBuilder
+import com.example.spotifyexplained.html.GraphHtmlBuilder
 import com.faltenreich.skeletonlayout.applySkeleton
 import java.util.*
 
@@ -48,6 +48,7 @@ class ArtistRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickH
     private lateinit var featuresList: RecyclerView
     private lateinit var genresList: RecyclerView
     private lateinit var bundleLineInfoList: RecyclerView
+    private lateinit var colorInfoList : RecyclerView
 
     private val showDetailInfoFunc = { message: String -> this.showDetailInfo(message) }
     private val showBundleDetailInfoFunc = { tracks: String, message: String -> this.showBundleDetailInfo(tracks, message) }
@@ -81,6 +82,7 @@ class ArtistRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickH
         featuresList = binding.root.findViewById(R.id.featuresLineRecycler)
         genresList = binding.root.findViewById(R.id.genresLineRecycler)
         bundleLineInfoList = binding.root.findViewById(R.id.bundleLineRecycler)
+        colorInfoList = binding.root.findViewById(R.id.colorInfoRecycler)
 
         //Main List
         adapter = TracksRecommendedBaseDatabaseAdapter(this)
@@ -210,7 +212,7 @@ class ArtistRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickH
     private fun showBundleDetailInfo(nodeIndices: String, currentIndex: String) {
         (context as MainActivity).runOnUiThread {
             val bundleItems = viewModel.showBundleDetailInfo(nodeIndices, currentIndex)
-            bundleTrackList.adapter = BundleAdapter(bundleItems)
+            bundleTrackList.adapter = BundleAdapter(bundleItems, this)
         }
     }
 
@@ -287,5 +289,12 @@ class ArtistRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickH
     override fun onInfoIconClick() {
         viewModel.detailViewVisible.value = true
         viewModel.detailVisibleType.value = DetailVisibleType.INFO
+    }
+
+    override fun onColorInfoClick() {
+        val result = ColorHelper.sortColorsByHue(viewModel.genreColorMap)
+        colorInfoList.adapter = GenreColorAdapter(result?.map { GenreColor(it.key, Helper.getColorFromMap(it.key, result)) })
+        viewModel.detailViewVisible.value = true
+        viewModel.detailVisibleType.value = DetailVisibleType.COLORINFO
     }
 }

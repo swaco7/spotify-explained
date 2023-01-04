@@ -14,7 +14,7 @@ import com.example.spotifyexplained.R
 import com.example.spotifyexplained.databinding.ActivityMainBinding
 import com.example.spotifyexplained.general.App
 import com.example.spotifyexplained.general.Config
-import com.example.spotifyexplained.services.ApiHelper
+import com.example.spotifyexplained.services.ApiRepository
 import com.example.spotifyexplained.services.SessionManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.spotify.sdk.android.auth.AuthorizationClient
@@ -41,6 +41,11 @@ class MainActivity : AppCompatActivity() {
                 showError(getString(R.string.connection_dialog_message))
             }
         }
+        viewModel.accessError.observe(this){
+            if (it) {
+                showForbiddenError(getString(R.string.forbidden))
+            }
+        }
         navView.setupWithNavController(navController)
     }
 
@@ -58,10 +63,42 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun showForbiddenError(error: String ) {
+        android.app.AlertDialog.Builder(this)
+            .setTitle(getString(R.string.something_wrong))
+            .setMessage(error)
+            .setPositiveButton(
+                getString(R.string.connection_dialog_close_button)
+            ) { p0, _ ->
+                p0.cancel()
+                viewModel.accessError.value = false
+                refreshCurrentDestination()
+            }
+            .setNegativeButton(
+                getString(R.string.logout_button)
+            ){ p0, _ ->
+                p0.cancel()
+                viewModel.accessError.value = false
+                logoutUser()
+                SessionManager.clearToken()
+                //AuthorizationClient.clearCookies(this)
+                authorizeUser()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.top_bar_menu, menu)
         return super.onCreateOptionsMenu(menu)
+    }
+
+    private fun getRedirectUri(): Uri? {
+        return Uri.Builder()
+            .scheme("spotify-sdk")
+            .authority("auth")
+            .build()
     }
 
     fun authorizeUser(){
@@ -80,9 +117,9 @@ class MainActivity : AppCompatActivity() {
         return AuthorizationRequest.Builder(
             Config.CLIENT_ID,
             type,
-            Uri.parse(Config.REDIRECT_URI).toString()
+            getRedirectUri().toString()
         )
-            .setShowDialog(false)
+            .setShowDialog(true)
             .setScopes(arrayOf("user-read-private", "user-library-read", "user-top-read", "playlist-modify-private", "playlist-modify-public"))
             .setCampaign("your-campaign-token")
             .build()
@@ -130,7 +167,7 @@ class MainActivity : AppCompatActivity() {
                         response.accessToken,
                         System.currentTimeMillis() + (response.expiresIn * 1000 - 1000)
                     )
-                    val profile = ApiHelper.getProfile(this@MainActivity)
+                    val profile = ApiRepository.getProfile(this@MainActivity)
                     val savedUserId = SessionManager.getUserId()
                     if (savedUserId == null || savedUserId != profile?.id){
                         logoutUser()

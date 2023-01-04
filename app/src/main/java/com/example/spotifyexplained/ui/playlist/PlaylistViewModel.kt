@@ -4,10 +4,10 @@ import android.app.Activity
 import android.content.Context
 import androidx.lifecycle.*
 import com.example.spotifyexplained.activity.MainActivity
-import com.example.spotifyexplained.database.FeaturesWeightEntity
-import com.example.spotifyexplained.database.PlaylistNextTrackEntity
-import com.example.spotifyexplained.database.PlaylistTrackEntity
-import com.example.spotifyexplained.database.TrackInPoolEntity
+import com.example.spotifyexplained.database.entity.FeaturesWeightEntity
+import com.example.spotifyexplained.database.entity.PlaylistNextTrackEntity
+import com.example.spotifyexplained.database.entity.PlaylistTrackEntity
+import com.example.spotifyexplained.database.entity.TrackInPoolEntity
 import com.example.spotifyexplained.general.Helper
 import com.example.spotifyexplained.general.PlaylistClickHandler
 import com.example.spotifyexplained.general.VisualTabClickHandler
@@ -16,7 +16,7 @@ import com.example.spotifyexplained.model.enums.LoadingState
 import com.example.spotifyexplained.model.enums.TrackFeedbackType
 import com.example.spotifyexplained.model.enums.VisualState
 import com.example.spotifyexplained.repository.TrackRepository
-import com.example.spotifyexplained.services.ApiHelper
+import com.example.spotifyexplained.services.ApiRepository
 import com.example.spotifyexplained.services.SessionManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -132,7 +132,7 @@ class PlaylistViewModel(activity: Activity, private val repository: TrackReposit
      * Initializes features and pushes initialized features to database repository
      */
     private suspend fun initializeFeatures(){
-        val userTracks = ApiHelper.getTracksAudioFeatures((context as MainActivity).viewModel.topTracks.value!!.map { it.track }, context!!) ?: mutableListOf()
+        val userTracks = ApiRepository.getTracksAudioFeatures((context as MainActivity).viewModel.topTracks.value!!.map { it.track }, context!!) ?: mutableListOf()
         val averages = mutableListOf<Double>()
         if (userTracks.isNotEmpty()) {
             for (index in 0 until userTracks[0].features.count()) {

@@ -22,7 +22,7 @@
             android:id="@+id/sourceArtist">
 
             <include layout="@layout/reusable_info_circle"
-                app:url="@{bundleLineInfo.sourceTrack.track.album.albumImages[0].url}"
+                app:url="@{bundleLineInfo.sourceTrack.track == null ? bundleLineInfo.sourceArtist.images[0].url : bundleLineInfo.sourceTrack.track.album.albumImages[0].url}"
                 app:artistName="@{bundleLineInfo.sourceArtist.artistName}"
                 app:sourceTrack="@{bundleLineInfo.sourceTrack}">
             </include>
@@ -70,7 +70,7 @@
             android:id="@+id/targetArtist">
 
             <include layout="@layout/reusable_info_circle"
-                app:url="@{bundleLineInfo.targetTrack.track.album.albumImages[0].url}"
+                app:url="@{bundleLineInfo.targetTrack.track == null ? bundleLineInfo.targetArtist.images[0].url : bundleLineInfo.targetTrack.track.album.albumImages[0].url}"
                 app:artistName="@{bundleLineInfo.targetArtist.artistName}"
                 app:sourceTrack="@{bundleLineInfo.targetTrack}">
             </include>

@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.spotifyexplained.database.BaseTrackEntity
+import com.example.spotifyexplained.database.entity.BaseTrackEntity
 import com.example.spotifyexplained.databinding.TracksSimplifiedRowBinding
 import com.example.spotifyexplained.model.Track
 import com.example.spotifyexplained.general.TrackDetailClickHandler

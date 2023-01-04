@@ -3,20 +3,26 @@ package com.example.spotifyexplained.general
 import android.content.Context
 import android.graphics.Color
 import com.example.spotifyexplained.model.*
-import com.example.spotifyexplained.services.ApiHelper
+import com.example.spotifyexplained.services.ApiRepository
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
 object ColorHelper {
-    private fun prepareGenresGroups(availableGenres : GenreSeeds, genresList: List<Array<String>>) : MutableList<GenresGroup>{
+    /**
+     * Creates genres groups for provided list of genres
+     * @param[availableGenres] available genres recognized by Spotify endpoint
+     * @param[genresList] provided list of genres for group generation
+     * @return list of genre groups
+     */
+    fun prepareGenresGroups(availableGenres : GenreSeeds, genresList: List<Array<String>>) : MutableList<GenresGroup>{
         val genreGroups = mutableListOf<GenresGroup>()
         for (genres in genresList){
             for (genre in genres) {
-                if (isPartOfGroup(genre, genreGroups.map { it.name }, genreGroups)) {
+                if (isPartOfGroup(genre, availableGenres.seeds.toList(), genreGroups)) {
                     continue
                 }
-                if (isPartOfGroup(genre, availableGenres.seeds.toList(), genreGroups)) {
+                if (isPartOfGroup(genre, genreGroups.map { it.name }, genreGroups)) {
                     continue
                 }
                 genreGroups.add(GenresGroup(genre, mutableListOf(genre)))
@@ -25,6 +31,13 @@ object ColorHelper {
         return genreGroups
     }
 
+    /**
+     * Checks if genre can be assigned to existing group and add the genre to the group in case of success
+     * @param[genre] current genre
+     * @param[genresList] list of genres to match current genre
+     * @param[genreGroups] current existing genreGroups
+     * @return true if current genre was matched
+     */
     private fun isPartOfGroup(genre: String, genresList: List<String>, genreGroups: MutableList<GenresGroup>) : Boolean{
         val genreSet = genre.replace("&", "-n-")
             .replace("hip hop", "hip-hop")
@@ -44,6 +57,11 @@ object ColorHelper {
         return matchFound
     }
 
+    /**
+     * Creates desired number colors that are as far from each other (in terms of hue) as possible
+     * @param[numberOfGroups] desired number of colors
+     * @return list of colors
+     */
     fun assignColorToGenreGroups(numberOfGroups: Int): List<MixableColor>{
         val colorList = mutableListOf<MixableColor>()
         for (i in 0..numberOfGroups) {
@@ -59,6 +77,12 @@ object ColorHelper {
         return a - result * b
     }
 
+    /**
+     * Returns color mixed from provided array of genres
+     * @param[genres] array of genres for mixing
+     * @param[genreColorMap] map of genre and assigned color
+     * @return formatted color string containing r,g,b,a values
+     */
     fun getArtistColor(genres: Array<String>?, genreColorMap : HashMap<String, MixableColor>): String {
         val colorArray = ArrayList<MixableColor>()
         if (genres.isNullOrEmpty()){
@@ -73,7 +97,11 @@ object ColorHelper {
         return String.format("rgba(${finalColor.r}, ${finalColor.g}, ${finalColor.b}, ${finalColor.a})")
     }
 
-    private fun removeExtraGenreGroups(genreGroups : MutableList<GenresGroup>){
+    /**
+     * Merges genre groups that can be merged
+     * @param[genreGroups] list of genre groups, this list is modified
+     */
+    fun removeExtraGenreGroups(genreGroups : MutableList<GenresGroup>){
         val extraGroups = mutableListOf<GenresGroup>()
         for (currentGroup in genreGroups){
             val groupsWithoutCurrent = genreGroups.filter { genreGroups.indexOf(it) > genreGroups.indexOf(currentGroup)}
@@ -89,18 +117,24 @@ object ColorHelper {
         genreGroups.removeAll { extraGroups.contains(it) }
     }
 
+    /**
+     * Creates genre color map that assigns color to each genre for all genres in provided list of artist
+     * @param[artists] artists, each artist contains array of genres
+     * @param[context] context
+     * @return constructed map
+     */
     suspend fun gatherColorsForGenres(artists : List<Artist>, context: Context) : HashMap<String, MixableColor> {
-        val availableGenreSeeds = ApiHelper.getAvailableGenreSeeds(context) ?: GenreSeeds(arrayOf())
-        val frequencyMap: MutableMap<String, Int> = HashMap()
-        for (artist in artists) {
-            if (artist.genres != null && artist.genres!!.isNotEmpty()) {
-                for (genre in artist.genres!!) {
-                    var count = frequencyMap[genre]
-                    if (count == null) count = 0
-                    frequencyMap[genre] = count + 1
-                }
-            }
-        }
+        val availableGenreSeeds = ApiRepository.getAvailableGenreSeeds(context) ?: GenreSeeds(arrayOf())
+//        val frequencyMap: MutableMap<String, Int> = HashMap()
+//        for (artist in artists) {
+//            if (artist.genres != null && artist.genres!!.isNotEmpty()) {
+//                for (genre in artist.genres!!) {
+//                    var count = frequencyMap[genre]
+//                    if (count == null) count = 0
+//                    frequencyMap[genre] = count + 1
+//                }
+//            }
+//        }
         val genreGroups = prepareGenresGroups(availableGenreSeeds, artists.map { it.genres ?: arrayOf() }).sortedByDescending { it.items.size }.toMutableList()
         removeExtraGenreGroups(genreGroups)
         val colorList = assignColorToGenreGroups(genreGroups.size)
@@ -129,5 +163,15 @@ object ColorHelper {
             }
         }
         return genreColorMap
+    }
+
+    fun sortColorsByHue(colorMap : HashMap<String, MixableColor>): HashMap<String, MixableColor>?{
+        return colorMap.toList().sortedBy { getHue(it.second) }.toMap() as? HashMap
+    }
+
+    private fun getHue(color: MixableColor): Float{
+        val hsv = FloatArray(3)
+        Color.RGBToHSV(color.r, color.g, color.b, hsv)
+        return hsv[0]
     }
 }

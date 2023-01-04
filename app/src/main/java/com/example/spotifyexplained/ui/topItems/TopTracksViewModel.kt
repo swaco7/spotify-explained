@@ -12,7 +12,7 @@ import com.example.spotifyexplained.general.Helper
 import com.example.spotifyexplained.general.VisualTabClickHandler
 import com.example.spotifyexplained.model.*
 import com.example.spotifyexplained.model.enums.*
-import com.example.spotifyexplained.services.ApiHelper
+import com.example.spotifyexplained.services.ApiRepository
 import kotlinx.coroutines.launch
 
 /**
@@ -46,10 +46,10 @@ class TopTracksViewModel(activity: Activity) : ViewModel(), VisualTabClickHandle
         MutableLiveData<List<TrackAudioFeatures>>(listOf())
     }
     val nodes: MutableLiveData<ArrayList<D3ForceNode>> by lazy {
-        MutableLiveData<ArrayList<D3ForceNode>>(ArrayList())
+        MutableLiveData<ArrayList<D3ForceNode>>(arrayListOf())
     }
     val links: MutableLiveData<ArrayList<D3ForceLink>> by lazy {
-        MutableLiveData<ArrayList<D3ForceLink>>(ArrayList())
+        MutableLiveData<ArrayList<D3ForceLink>>(arrayListOf())
     }
 
     private lateinit var tracksFeatures: List<TrackAudioFeatures>
@@ -71,14 +71,14 @@ class TopTracksViewModel(activity: Activity) : ViewModel(), VisualTabClickHandle
     }
 
     private suspend fun getUserTopTracks(){
-        tracks.value = ApiHelper.getUserTopTracks(50, context as MainActivity)
+        tracks.value = ApiRepository.getUserTopTracks(50, context as MainActivity)
     }
 
     /**
      *  Gets recommended tracks
      */
     private suspend fun recommendTracksGetFeatures() {
-        tracksFeatures = ApiHelper.getTracksAudioFeatures(tracks.value ?: listOf(), context!!) ?: listOf()
+        tracksFeatures = ApiRepository.getTracksAudioFeatures(tracks.value ?: listOf(), context!!) ?: listOf()
     }
 
     /**
@@ -99,7 +99,7 @@ class TopTracksViewModel(activity: Activity) : ViewModel(), VisualTabClickHandle
         val forceGraph = Helper.prepareGraphTracks(settings.value, tracksFeatures, tracksFeatures, context!!)
         nodes.value = forceGraph.nodes
         genreColorMap = forceGraph.genreColorMap
-        allGraphNodes.value = ApiHelper.getTracksAudioFeatures(forceGraph.nodeTracks, context!!) ?: return
+        allGraphNodes.value = ApiRepository.getTracksAudioFeatures(forceGraph.nodeTracks, context!!) ?: return
         links.value = forceGraph.links
     }
 
@@ -107,7 +107,7 @@ class TopTracksViewModel(activity: Activity) : ViewModel(), VisualTabClickHandle
      * Assigns artist data to each recommended track
      */
     private suspend fun getTracksArtistGenres() {
-        val response = ApiHelper.getArtistWithGenres(tracks.value?.toMutableList() ?: mutableListOf(), context!!) ?: return
+        val response = ApiRepository.getArtistWithGenres(tracks.value?.toMutableList() ?: mutableListOf(), context!!) ?: return
         for (i in response.artists.indices) {
             tracks.value!![i].trackGenres = response.artists[i].genres
             tracks.value!![i].artists[0].genres = response.artists[i].genres
@@ -125,7 +125,7 @@ class TopTracksViewModel(activity: Activity) : ViewModel(), VisualTabClickHandle
                 trackArtist = (context as MainActivity).viewModel.topTracks.value?.firstOrNull { it.track.artists[0].artistId == track.artists[0].artistId }?.track?.artists?.get(0)
             }
             track.artists[0].related_artists = trackArtist?.related_artists
-                ?: (ApiHelper.getRelatedArtists(track.artists[0].artistId, context!!)?.toList() ?: mutableListOf())
+                ?: (ApiRepository.getRelatedArtists(track.artists[0].artistId, context!!)?.toList() ?: mutableListOf())
         }
     }
 
@@ -161,11 +161,11 @@ class TopTracksViewModel(activity: Activity) : ViewModel(), VisualTabClickHandle
         detailViewVisible.value = true
         when (nodeIndices!!.split(",").last()) {
             "RELATED" -> {
-                lineInfo.value = GraphInfoHelper.showLineDetailInfo(nodeIndices, listOf(), allGraphNodes.value!!.map { it.track })
+                lineInfo.value = GraphInfoHelper.showLineDetailInfo(nodeIndices, listOf(), allGraphNodes.value ?: listOf())
                 detailVisibleType.value = DetailVisibleType.LINE
             }
             "GENRE" -> {
-                lineGenreInfo.value = GraphInfoHelper.showLineDetailGenreInfo(nodeIndices, listOf(), allGraphNodes.value!!.map { it.track })
+                lineGenreInfo.value = GraphInfoHelper.showLineDetailGenreInfo(nodeIndices, listOf(), allGraphNodes.value ?: listOf())
                 detailVisibleType.value = DetailVisibleType.LINEGENRE
             }
             "FEATURE" -> {

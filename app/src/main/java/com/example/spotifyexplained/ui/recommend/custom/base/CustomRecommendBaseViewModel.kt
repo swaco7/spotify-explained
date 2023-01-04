@@ -8,13 +8,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import com.example.spotifyexplained.R
 import com.example.spotifyexplained.activity.MainActivity
-import com.example.spotifyexplained.database.TrackInPoolEntity
+import com.example.spotifyexplained.database.entity.TrackInPoolEntity
 import com.example.spotifyexplained.general.Config
 import com.example.spotifyexplained.general.ExpandClickHandler
 import com.example.spotifyexplained.model.*
 import com.example.spotifyexplained.model.enums.LoadingState
 import com.example.spotifyexplained.repository.TrackRepository
-import com.example.spotifyexplained.services.ApiHelper
+import com.example.spotifyexplained.services.ApiRepository
 import com.example.spotifyexplained.services.SessionManager
 import com.example.spotifyexplained.ui.general.HelpDialogFragment
 import kotlinx.coroutines.delay
@@ -63,8 +63,8 @@ class CustomRecommendBaseViewModel(activity: Activity, private val repository: T
     }
 
     private suspend fun getUserTracks() {
-        topTracks = ApiHelper.getUserTopTracks(50, context) ?: listOf()
-        savedTracks = ApiHelper.getUserSavedTracks(Config.savedTracksLimit, context) ?: listOf()
+        topTracks = ApiRepository.getUserTopTracks(50, context) ?: listOf()
+        savedTracks = ApiRepository.getUserSavedTracks(Config.savedTracksLimit, context) ?: listOf()
     }
 
     /**
@@ -73,7 +73,7 @@ class CustomRecommendBaseViewModel(activity: Activity, private val repository: T
      */
     private suspend fun savePool(pool : Pair<Int, List<TrackAudioFeatures>>) {
         clearData()
-        insertListToPool(pool.second.map { TrackInPoolEntity(it.track.trackId, it.track, it.features, if (pool.second.indexOf(it) < pool.first) 0 else 1)})
+        insertListToPool(pool.second.map { TrackInPoolEntity(it.track.trackId, it.track, it.features, if (pool.second.indexOf(it) < pool.first) 0 else 1) })
         context.viewModel.poolIsLoading.value = false
     }
 
@@ -126,7 +126,7 @@ class CustomRecommendBaseViewModel(activity: Activity, private val repository: T
     private suspend fun getTracksPool() : Pair<Int, List<TrackAudioFeatures>> {
         context.viewModel.phase.value = 1
         val userTracks = (savedTracks + topTracks).distinctBy { it.trackId }.take(Config.customRecommendTrackLimit)
-        val userTracksFeatures = ApiHelper.getTracksAudioFeatures(userTracks.toMutableList(), context) ?: mutableListOf()
+        val userTracksFeatures = ApiRepository.getTracksAudioFeatures(userTracks.toMutableList(), context) ?: mutableListOf()
         val relatedArtists = mutableListOf<Artist>()
 
         // Gather related artists from user's tracks
@@ -134,7 +134,7 @@ class CustomRecommendBaseViewModel(activity: Activity, private val repository: T
             val trackArtist =
                 context.viewModel.topArtists.value?.firstOrNull { it.artistId == userTracks[index].artists[0].artistId }
             relatedArtists.addAll(
-                trackArtist?.related_artists ?: ApiHelper.getRelatedArtists(
+                trackArtist?.related_artists ?: ApiRepository.getRelatedArtists(
                     userTracks[index].artists[0].artistId, context
                 ) ?: mutableListOf()
             )
@@ -154,7 +154,7 @@ class CustomRecommendBaseViewModel(activity: Activity, private val repository: T
         for (part in distinctRelatedParts) {
             for (artist in part) {
                 artistsTopTracks.addAll(
-                    ApiHelper.getArtistTopTracks(artist.artistId, context) ?: mutableListOf()
+                    ApiRepository.getArtistTopTracks(artist.artistId, context) ?: mutableListOf()
                 )
             }
             context.viewModel.loadingProgress.value = (((distinctRelatedParts.indexOf(part).toDouble())/ distinctRelatedParts.size) * 100).toInt()
@@ -169,7 +169,7 @@ class CustomRecommendBaseViewModel(activity: Activity, private val repository: T
         for (chunk in chunkedArtistTopTracks) {
             Log.e("request", chunkedArtistTopTracks.indexOf(chunk).toString())
             customRecommendedTracksFeatures.addAll(
-                ApiHelper.getTracksAudioFeatures(
+                ApiRepository.getTracksAudioFeatures(
                     chunk.toMutableList(),
                     context
                 )

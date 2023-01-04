@@ -2,7 +2,7 @@ package com.example.spotifyexplained.repository
 
 import androidx.annotation.WorkerThread
 import com.example.spotifyexplained.database.TrackDao
-import com.example.spotifyexplained.database.*
+import com.example.spotifyexplained.database.entity.*
 import kotlinx.coroutines.flow.Flow
 
 class TrackRepository(private val trackDao: TrackDao) {
