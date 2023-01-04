@@ -3,13 +3,10 @@ package com.example.spotifyexplained.adapter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager2.widget.ViewPager2
-import com.example.spotifyexplained.databinding.PageContentItemBinding
 import com.example.spotifyexplained.databinding.WordcloudItemBinding
 import com.example.spotifyexplained.general.App.Companion.context
-import com.example.spotifyexplained.model.home.PageItem
 import com.example.spotifyexplained.model.home.WordItemBundle
-import com.example.spotifyexplained.services.WordCloud
+import com.example.spotifyexplained.html.WordCloud
 import java.util.*
 
 class WorldCloudViewPagerAdapter(var items: List<WordItemBundle>) : RecyclerView.Adapter<WorldCloudViewPagerAdapter.ViewHolder>() {

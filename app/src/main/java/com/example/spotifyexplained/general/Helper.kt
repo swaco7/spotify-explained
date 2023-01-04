@@ -21,21 +21,12 @@ object Helper {
         }
     }
 
-    fun compareTrackFeatures(recomTrack: TrackAudioFeatures, targetTrack: TrackAudioFeatures, minMax: List<Pair<Double, Double>>): Double  {
-        var sum = 0.0
-        for (index in 0 until recomTrack.features.count()) {
-            val diff = abs(normalize(recomTrack.features.at(index)!!, minMax[index].first, minMax[index].second) - normalize(targetTrack.features.at(index)!!, minMax[index].first, minMax[index].second))
-            sum += diff
-        }
-        return sum
-    }
-
-    fun compareTrackFeatures(recomTrack: TrackAudioFeatures, targetTrack: TrackAudioFeatures, minMax: List<Pair<Double, Double>>, featuresSettings: List<AudioFeature>): Double  {
+    fun compareTrackFeatures(recomTrack: TrackAudioFeatures, targetTrack: TrackAudioFeatures, minMax: List<Pair<Double, Double>>, featuresSettings: List<AudioFeature>? = null): Double  {
         var sum = 0.0
         for (index in 0 until recomTrack.features.count()) {
             sum += abs(normalize(recomTrack.features.at(index)!!, minMax[index].first, minMax[index].second) -
                     normalize(targetTrack.features.at(index)!!, minMax[index].first, minMax[index].second)) *
-                    (featuresSettings[index].value ?: 0.0)
+                    (if (featuresSettings == null) 1.0 else featuresSettings[index].value ?: 0.0)
         }
         return sum
     }
@@ -51,12 +42,12 @@ object Helper {
 
     fun getSimilarity(recomTrack: TrackAudioFeatures, targetTrack: TrackAudioFeatures, minMax: List<Pair<Double, Double>>) : Double {
         val sum = compareTrackFeatures(recomTrack, targetTrack, minMax)
-        return 1 - sum/9
+        return 1 - (sum/AudioFeatureType.values().size)
     }
 
     fun getSimilarity(recomTrack: TrackAudioFeatures, targetTrack: List<Double>, minMax: List<Pair<Double, Double>>) : Double {
         val sum = compareTrackFeatures(recomTrack, targetTrack, minMax)
-        return 1 - sum/9
+        return 1 - (sum/AudioFeatureType.values().size)
     }
 
     fun normalize(rawValue: Double, min: Double, max: Double) : Double {
@@ -103,12 +94,22 @@ object Helper {
         return list
     }
 
-    fun calculateEdgeWeight(from: Artist?, to: Artist?): Int {
-        val firstIndex = max(from?.related_artists?.indexOf(to) ?: 0, 0)
-        val secondIndex = max(to?.related_artists?.indexOf(from) ?: 0, 0)
-        val first = if (firstIndex != 0) 10 + truncate((20.0 - firstIndex) / 2).toInt() else 0
-        val second = if (secondIndex != 0) 10 + truncate((20.0 - secondIndex) / 2).toInt() else 0
+    private fun calculateEdgeWeight(from: Artist?, to: Artist?): Int {
+        val firstIndex = max(from?.related_artists?.indexOf(to) ?: -1, -1)
+        val secondIndex = max(to?.related_artists?.indexOf(from) ?: -1, -1)
+        val first = if (firstIndex != -1) 10 + truncate((20.0 - firstIndex) / 2).toInt() else 0
+        val second = if (secondIndex != -1) 10 + truncate((20.0 - secondIndex) / 2).toInt() else 0
         return first + second
+    }
+
+    private fun removeDuplicateEdges(edgesList: MutableList<Pair<Artist, Artist>>) : MutableList<Pair<Artist, Artist>> {
+        val tempEdgesList = mutableListOf<Pair<Artist, Artist>>()
+        for (pair in edgesList){
+            if (tempEdgesList.find { it.first == pair.second && it.second == pair.first } == null){
+                tempEdgesList.add(pair)
+            }
+        }
+        return tempEdgesList
     }
 
     fun getEdges(recommendedTracks: List<Track>, topArtists: List<Artist>): MutableList<Pair<Artist, Artist>> {
@@ -125,10 +126,10 @@ object Helper {
                 }
             }
         }
-        return edgesList.distinct().toMutableList()
+        return removeDuplicateEdges(edgesList).distinct().toMutableList()
     }
 
-    fun getEdgesTracks(recommendedTracks: List<Track>, topTracks: MutableList<TrackAudioFeatures>): MutableList<Pair<Track, Track>> {
+    private fun getEdgesTracks(recommendedTracks: List<Track>, topTracks: MutableList<TrackAudioFeatures>): MutableList<Pair<Track, Track>> {
         val edgesList = mutableListOf<Pair<Track, Track>>()
         for (recommendedTrack in recommendedTracks) {
             for (relatedArtist in recommendedTrack.artists[0].related_artists) {
@@ -146,31 +147,38 @@ object Helper {
         return edgesList.distinct().toMutableList()
     }
 
-    fun getGenreEdgesTracks(recommendedTracks: List<Track>, topTracks: MutableList<TrackAudioFeatures>): MutableList<Pair<Track, Track>> {
-        val edgesList = mutableListOf<Pair<Track, Track>>()
+    fun getGenreEdges(recommendedTracks: List<Track>, topArtists: List<Artist>): MutableList<Pair<Artist, Artist>> {
+        val edgesList = mutableListOf<Pair<Artist, Artist>>()
         for (recommendedTrack in recommendedTracks) {
-            for (topTrack in topTracks) {
-                if (topTrack.track.artists[0].genres == null || recommendedTrack.artists[0].genres == null || topTrack.track.trackId == recommendedTrack.trackId) {
-                    continue
-                }
-                val jaccard = (topTrack.track.artists[0].genres!!.intersect(recommendedTrack.artists[0].genres!!.toMutableList()).size.toDouble() / topTrack.track.artists[0].genres!!.union(recommendedTrack.artists[0].genres!!.toMutableList()).size)
-                if (jaccard > Config.jaccardTracks) {
-                    if (edgesList.find { it.first.trackId == topTrack.track.trackId && it.second.trackId == recommendedTrack.trackId } == null) {
-                        edgesList.add(Pair(recommendedTrack, topTrack.track))
-                    }
+            for (topArtist in topArtists) {
+                val jaccard = getJaccardSimilarity(topArtist.genres, recommendedTrack.artists[0].genres)
+                if (jaccard > Config.jaccardArtists) {
+                    edgesList.add(Pair(recommendedTrack.artists[0], topArtist))
                 }
             }
         }
         return edgesList.distinct().toMutableList()
     }
 
-    fun getGenreEdges(recommendedTracks: List<Track>, topArtists: List<Artist>): MutableList<Pair<Artist, Artist>> {
-        val edgesList = mutableListOf<Pair<Artist, Artist>>()
+    private fun getJaccardSimilarity(genres1: Array<String>?, genres2: Array<String>?): Double{
+        if (genres1 == null || genres2 == null) {
+            return 0.0
+        }
+        return genres1.intersect(genres2!!.toList()).size.toDouble() / genres1.union(genres2!!.toList()).size
+    }
+
+    private fun getGenreEdgesTracks(recommendedTracks: List<Track>, topTracks: MutableList<TrackAudioFeatures>): MutableList<Pair<Track, Track>> {
+        val edgesList = mutableListOf<Pair<Track, Track>>()
         for (recommendedTrack in recommendedTracks) {
-            for (topArtist in topArtists) {
-                val jaccard = (topArtist.genres!!.intersect(recommendedTrack.artists[0].genres!!.toMutableList()).size.toDouble() / topArtist.genres!!.union(recommendedTrack.artists[0].genres!!.toMutableList()).size)
-                if (jaccard > Config.jaccardArtists) {
-                    edgesList.add(Pair(recommendedTrack.artists[0], topArtist))
+            for (topTrack in topTracks) {
+                if (topTrack.track.artists[0].genres == null || recommendedTrack.artists[0].genres == null || topTrack.track.trackId == recommendedTrack.trackId) {
+                    continue
+                }
+                val jaccard = getJaccardSimilarity(topTrack.track.artists[0].genres, recommendedTrack.artists[0].genres)
+                if (jaccard > Config.jaccardTracks) {
+                    if (edgesList.find { it.first.trackId == topTrack.track.trackId && it.second.trackId == recommendedTrack.trackId } == null) {
+                        edgesList.add(Pair(recommendedTrack, topTrack.track))
+                    }
                 }
             }
         }
@@ -226,17 +234,17 @@ object Helper {
                 }
             }
         }
-        return edgesList
+        return removeDuplicateEdges(edgesList)
     }
 
     fun getTopArtistsGenresEdges(artists: List<Artist>): MutableList<Pair<Artist, Artist>> {
         val edgesList = mutableListOf<Pair<Artist, Artist>>()
         for (i in artists.indices) {
-            for (j in i until artists.size) {
+            for (j in i + 1 until artists.size) {
                 if (artists[i].genres == null || artists[j].genres == null) {
                     continue
                 }
-                val jaccard = (artists[i].genres!!.intersect(artists[j].genres!!.toMutableList()).size.toDouble() / artists[i].genres!!.union(artists[j].genres!!.toMutableList()).size)
+                val jaccard = getJaccardSimilarity(artists[i].genres, artists[j].genres)
                 if (jaccard > Config.jaccardTopTracks) {
                     edgesList.add(Pair(artists[i], artists[j]))
                 }
@@ -246,7 +254,7 @@ object Helper {
     }
 
 
-    fun getNodesSizeBasedOnEdges(
+    private fun getNodesSizeBasedOnEdges(
         genreColorMap: HashMap<String, MixableColor>,
         nodeArtists: List<Artist>,
         topArtists: List<Artist>,
@@ -271,7 +279,7 @@ object Helper {
         return relationDataNodes
     }
 
-    fun getNodesSizeBasedOnEdgesArtists(
+    private fun getNodesSizeBasedOnEdgesArtists(
         genreColorMap: HashMap<String, MixableColor>,
         nodeArtists: List<Artist>,
         edgesList: MutableList<Pair<Artist, Artist>>
@@ -290,7 +298,7 @@ object Helper {
         return relationDataNodes
     }
 
-    fun prepareNodesTracks(
+    private fun prepareNodesTracks(
         genreColorMap: HashMap<String, MixableColor>,
         nodeTracks: List<Track>,
         topTracks: MutableList<Track>,
@@ -315,7 +323,7 @@ object Helper {
         return relationDataNodes
     }
 
-    fun getLinksGenres(edgesList: MutableList<Pair<Artist, Artist>>, genreColorMap: HashMap<String, MixableColor>): ArrayList<D3ForceLink>{
+    private fun getLinksGenres(edgesList: MutableList<Pair<Artist, Artist>>, genreColorMap: HashMap<String, MixableColor>): ArrayList<D3ForceLink>{
         val relationDataLinks = ArrayList<D3ForceLink>()
         for (pair in edgesList) {
             relationDataLinks.add(
@@ -331,7 +339,7 @@ object Helper {
         return relationDataLinks
     }
 
-    fun getLinksGenresTracks(edgesList: MutableList<Pair<Track, Track>>, genreColorMap: HashMap<String, MixableColor>): ArrayList<D3ForceLink>{
+    private fun getLinksGenresTracks(edgesList: MutableList<Pair<Track, Track>>, genreColorMap: HashMap<String, MixableColor>): ArrayList<D3ForceLink>{
         val relationDataLinks = ArrayList<D3ForceLink>()
         for (pair in edgesList) {
             relationDataLinks.add(
@@ -339,15 +347,18 @@ object Helper {
                     pair.first.trackName.replace('"', '&'),
                     pair.second.trackName.replace('"', '&'),
                     Config.baseLineWidth,
-                    ColorHelper.getArtistColor(pair.first.artists[0].genres!!.intersect(pair.second.artists[0].genres!!.toMutableList()).toTypedArray(), genreColorMap),
-                LinkType.GENRE
-            )
+                    ColorHelper.getArtistColor(
+                        pair.first.artists[0].genres!!.intersect(pair.second.artists[0].genres!!.toMutableList())
+                            .toTypedArray(), genreColorMap
+                    ),
+                    LinkType.GENRE
+                )
             )
         }
         return relationDataLinks
     }
 
-    fun getLinksFeatures(edgesList: MutableList<Pair<Track, Track>>): ArrayList<D3ForceLink>{
+    private fun getLinksFeatures(edgesList: MutableList<Pair<Track, Track>>): ArrayList<D3ForceLink>{
         val relationDataLinks = ArrayList<D3ForceLink>()
         for (pair in edgesList) {
             relationDataLinks.add(
@@ -363,7 +374,7 @@ object Helper {
         return relationDataLinks
     }
 
-    fun getLinks(edgesList: MutableList<Pair<Artist, Artist>>): ArrayList<D3ForceLink>{
+    private fun getLinks(edgesList: MutableList<Pair<Artist, Artist>>): ArrayList<D3ForceLink>{
         val relationDataLinks = ArrayList<D3ForceLink>()
         for (pair in edgesList) {
             relationDataLinks.add(
@@ -379,7 +390,7 @@ object Helper {
         return relationDataLinks
     }
 
-    fun getLinksTracks(edgesList: MutableList<Pair<Track, Track>>): ArrayList<D3ForceLink>{
+    private fun getLinksTracks(edgesList: MutableList<Pair<Track, Track>>): ArrayList<D3ForceLink>{
         val relationDataLinks = ArrayList<D3ForceLink>()
         for (pair in edgesList) {
             relationDataLinks.add(
@@ -395,44 +406,28 @@ object Helper {
         return relationDataLinks
     }
 
-    fun getGenreColorList(artist : Artist, genreColorMap: HashMap<String, MixableColor>): List<GenreColor>?{
-        return artist.genres?.map {
-            GenreColor(
-                it,
-                arrayListOf(
-                    genreColorMap[it]!!.a.toFloat(),
-                    genreColorMap[it]!!.r.toFloat(),
-                    genreColorMap[it]!!.g.toFloat(),
-                    genreColorMap[it]!!.b.toFloat(),
-                )
-            )
-        }
+    fun getGenreColorList(artist : Artist, genreColorMap: HashMap<String, MixableColor>): List<GenreColor>? {
+        return artist.genres?.map { GenreColor(it, getColorFromMap(it, genreColorMap)) }
     }
 
     fun getGenreColorList(colors : List<String>, genreColorMap: HashMap<String, MixableColor>): List<GenreColor> {
-        return colors.map {
-            GenreColor(
-                it,
-                arrayListOf(
-                    genreColorMap[it]!!.a.toFloat(),
-                    genreColorMap[it]!!.r.toFloat(),
-                    genreColorMap[it]!!.g.toFloat(),
-                    genreColorMap[it]!!.b.toFloat(),
-                )
-            )
-        }
+        return colors.map { GenreColor(it, getColorFromMap(it, genreColorMap)) }
     }
 
     fun getGenreColorList(color: String, genreColorMap: HashMap<String, MixableColor>): ArrayList<Float> {
+        return getColorFromMap(color, genreColorMap)
+    }
+
+    fun getColorFromMap(id: String, map: HashMap<String, MixableColor>) : ArrayList<Float>{
         return arrayListOf(
-            genreColorMap[color]!!.a.toFloat(),
-            genreColorMap[color]!!.r.toFloat(),
-            genreColorMap[color]!!.g.toFloat(),
-            genreColorMap[color]!!.b.toFloat()
+            map[id]!!.a.toFloat(),
+            map[id]!!.r.toFloat(),
+            map[id]!!.g.toFloat(),
+            map[id]!!.b.toFloat(),
         )
     }
 
-    fun prepareD3RelationsDistance(tracks: MutableList<TrackAudioFeatures>): Triple<ArrayList<D3ForceNode>, ArrayList<D3ForceLinkDistance>, List<BundleTrackFeatureItem>> {
+    fun prepareD3RelationsDistance(tracks: MutableList<TrackAudioFeatures>, distFactor: Int): Triple<ArrayList<D3ForceNode>, ArrayList<D3ForceLinkDistance>, List<BundleTrackFeatureItem>> {
         val relationDataNodes = ArrayList<D3ForceNode>()
         val relationDataLinks = ArrayList<D3ForceLinkDistance>()
         val minMaxFeatures = getMinMaxFeatures(tracks)
@@ -465,7 +460,7 @@ object Helper {
                         recommendedTrack.features.at(index)!!,
                         tracks.minOf { it.features.at(index)!! },
                         tracks.maxOf { it.features.at(index)!! }
-                    )*100).roundToInt()) * Config.forceDistanceFactor
+                    )*100).roundToInt() + 1) * distFactor
                 ))
             }
         }
@@ -508,16 +503,16 @@ object Helper {
         return ForceGraph(links, nodes, genreColorMap, nodeArtists, listOf(), BundleItemType.ARTIST)
     }
 
-    suspend fun prepareGraphArtists(settings: GraphSettings, recommendedTracks: List<Track>, topArtists: List<Artist>, context: Context): ForceGraph {
+    suspend fun prepareGraphArtists(settings: GraphSettings?, recommendedTracks: List<Track>, topArtists: List<Artist>, context: Context): ForceGraph {
         val edgesList = mutableListOf<Pair<Artist, Artist>>()
         val links = arrayListOf<D3ForceLink>()
-        var edgesListGenres = mutableListOf<Pair<Artist,Artist>>()
-        if (settings.relatedFlag) {
+        var edgesListGenres = mutableListOf<Pair<Artist, Artist>>()
+        if (settings?.relatedFlag == true) {
             val edgesListRelated = getEdges(recommendedTracks, topArtists)
             edgesList.addAll(edgesListRelated)
             links.addAll(getLinks(edgesListRelated))
         }
-        if (settings.genresFlag) {
+        if (settings?.genresFlag == true) {
             edgesListGenres = getGenreEdges(recommendedTracks, topArtists)
             edgesList.addAll(edgesListGenres)
         }
@@ -531,7 +526,7 @@ object Helper {
             recommendedTracks,
             edgesList
         )
-        if (settings.genresFlag) {
+        if (settings?.genresFlag == true) {
             links.addAll(getLinksGenres(edgesListGenres, genreColorMap))
         }
         return ForceGraph(links, nodes, genreColorMap, nodeArtists, listOf(), BundleItemType.ARTIST)
@@ -549,7 +544,6 @@ object Helper {
         if (settings?.genresFlag == true) {
             edgesListGenres = getGenreEdgesTracks(recommendedTracksFeatures?.map { it.track } ?: mutableListOf(), topTracks?.toMutableList() ?: mutableListOf())
             edgesList.addAll(edgesListGenres)
-
         }
         if (settings?.featuresFlag == true) {
             val edgesListFeatures = getFeaturesEdges(recommendedTracksFeatures, topTracks?.toMutableList())

@@ -20,7 +20,7 @@ import com.example.spotifyexplained.model.*
 import com.example.spotifyexplained.model.enums.DetailVisibleType
 import com.example.spotifyexplained.model.enums.LoadingState
 import com.example.spotifyexplained.model.enums.ZoomType
-import com.example.spotifyexplained.services.GraphHtmlBuilder
+import com.example.spotifyexplained.html.GraphHtmlBuilder
 import com.faltenreich.skeletonlayout.Skeleton
 import com.faltenreich.skeletonlayout.applySkeleton
 import java.util.*
@@ -38,6 +38,7 @@ class TopArtistsFragment : Fragment(), GraphClickHandler {
     private lateinit var bundleTrackList: RecyclerView
     private lateinit var genresList: RecyclerView
     private lateinit var bundleLineInfoList: RecyclerView
+    private lateinit var colorInfoList : RecyclerView
 
     private val showDetailInfoFunc = { message: String -> this.showDetailInfo(message) }
     private val showBundleDetailInfoFunc = { tracks: String, message: String -> this.showBundleDetailInfo(tracks, message) }
@@ -64,6 +65,7 @@ class TopArtistsFragment : Fragment(), GraphClickHandler {
         bundleTrackList.addItemDecoration(DividerItemDecoration(bundleTrackList.context, LinearLayoutManager.VERTICAL))
         genresList = binding.root.findViewById(R.id.genresLineRecycler)
         bundleLineInfoList = binding.root.findViewById(R.id.bundleLineRecycler)
+        colorInfoList = binding.root.findViewById(R.id.colorInfoRecycler)
 
         //Main List
         adapter = ArtistsAdapter(viewModel.artists.value!!)
@@ -93,7 +95,7 @@ class TopArtistsFragment : Fragment(), GraphClickHandler {
             binding.settings = it
         }
         viewModel.links.observe(viewLifecycleOwner) {
-            if (it.isNotEmpty()) {
+            if (it.isNotEmpty() || !viewModel.nodes.value.isNullOrEmpty()) {
                 drawD3Graph(
                     viewModel.nodes.value!!,
                     viewModel.links.value!!,
@@ -103,6 +105,9 @@ class TopArtistsFragment : Fragment(), GraphClickHandler {
         }
         viewModel.loadingState.observe(viewLifecycleOwner) {
             if (it == LoadingState.SUCCESS){
+                if (viewModel.links.value.isNullOrEmpty() && viewModel.nodes.value.isNullOrEmpty()){
+                    viewModel.graphLoadingState.value = LoadingState.FAILURE
+                }
                 skeleton.showOriginal()
             } else if (it == LoadingState.LOADING){
                 skeleton.showSkeleton()
@@ -217,5 +222,12 @@ class TopArtistsFragment : Fragment(), GraphClickHandler {
     override fun onInfoIconClick() {
         viewModel.detailViewVisible.value = true
         viewModel.detailVisibleType.value = DetailVisibleType.INFO
+    }
+
+    override fun onColorInfoClick() {
+        val result = ColorHelper.sortColorsByHue(viewModel.genreColorMap)
+        colorInfoList.adapter = GenreColorAdapter(result?.map { GenreColor(it.key, Helper.getColorFromMap(it.key, result)) })
+        viewModel.detailViewVisible.value = true
+        viewModel.detailVisibleType.value = DetailVisibleType.COLORINFO
     }
 }

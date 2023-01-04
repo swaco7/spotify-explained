@@ -47,15 +47,15 @@
                     android:onClick="@{() -> graphClickHandler.onCloseBundleClick()}"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/close" />
-                <TextView
-                    android:id="@+id/title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
-                    android:layout_centerVertical="true"
-                    android:padding="2dp"
-                    android:text="@string/this_bundle_contains">
-                </TextView>
+<!--                <TextView-->
+<!--                    android:id="@+id/title"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_centerHorizontal="true"-->
+<!--                    android:layout_centerVertical="true"-->
+<!--                    android:padding="2dp"-->
+<!--                    android:text="@string/this_bundle_contains">-->
+<!--                </TextView>-->
             </RelativeLayout>
 
             <LinearLayout

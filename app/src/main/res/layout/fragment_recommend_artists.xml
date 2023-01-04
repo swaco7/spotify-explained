@@ -80,6 +80,11 @@
             app:detailViewVisible="@{viewModel.detailViewVisible}"
             app:graphClickHandler="@{graphClickHandler}"/>
 
+        <include layout="@layout/reusable_color_info_layout"
+            app:detailVisibleType="@{viewModel.detailVisibleType}"
+            app:detailViewVisible="@{viewModel.detailViewVisible}"
+            app:graphClickHandler="@{graphClickHandler}"/>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="match_parent"

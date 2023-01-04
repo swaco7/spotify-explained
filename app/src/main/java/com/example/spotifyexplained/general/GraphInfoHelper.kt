@@ -53,7 +53,7 @@ object GraphInfoHelper {
         return bundleItems
     }
 
-    fun showLineDetailInfo(nodeIndices: String?, nodes: List<Artist>, nodesTracks: List<Track>): LineDetailInfo {
+    fun showLineDetailInfo(nodeIndices: String?, nodes: List<Artist>, nodesTracks: List<TrackAudioFeatures>): LineDetailInfo {
         val messageItems = nodeIndices!!.split(",")
         val sourceArtist: Artist
         val targetArtist: Artist
@@ -61,11 +61,11 @@ object GraphInfoHelper {
             sourceArtist = nodes[messageItems[0].toInt()]
             targetArtist = nodes[messageItems[1].toInt()]
         } else {
-            sourceArtist = nodesTracks[messageItems[0].toInt()].artists[0]
-            targetArtist = nodesTracks[messageItems[1].toInt()].artists[0]
+            sourceArtist = nodesTracks[messageItems[0].toInt()].track.artists[0]
+            targetArtist = nodesTracks[messageItems[1].toInt()].track.artists[0]
         }
-        val sourceToTarget = sourceArtist.related_artists.indexOf(targetArtist)
-        val targetToSource = targetArtist.related_artists.indexOf(sourceArtist)
+        val sourceToTarget = sourceArtist.related_artists?.indexOf(targetArtist) ?: -1
+        val targetToSource = targetArtist.related_artists?.indexOf(sourceArtist) ?: -1
         return LineDetailInfo(
             sourceArtist,
             targetArtist,
@@ -74,7 +74,7 @@ object GraphInfoHelper {
         )
     }
 
-    fun showLineDetailGenreInfo(nodeIndices: String?, nodes: List<Artist>, nodesTracks: List<Track>): LineDetailGenreInfo {
+    fun showLineDetailGenreInfo(nodeIndices: String?, nodes: List<Artist>, nodesTracks: List<TrackAudioFeatures>): LineDetailGenreInfo {
         val messageItems = nodeIndices!!.split(",")
         val sourceArtist: Artist
         val targetArtist: Artist
@@ -82,8 +82,8 @@ object GraphInfoHelper {
             sourceArtist = nodes[messageItems[0].toInt()]
             targetArtist = nodes[messageItems[1].toInt()]
         } else {
-            sourceArtist = nodesTracks[messageItems[0].toInt()].artists[0]
-            targetArtist = nodesTracks[messageItems[1].toInt()].artists[0]
+            sourceArtist = nodesTracks[messageItems[0].toInt()].track.artists[0]
+            targetArtist = nodesTracks[messageItems[1].toInt()].track.artists[0]
         }
         val intersection = sourceArtist.genres!!.intersect(targetArtist.genres!!.toMutableList()).toList()
         return LineDetailGenreInfo(
@@ -203,14 +203,14 @@ object GraphInfoHelper {
             targetArtist = artists[lineElements[1].toInt()]
             when (lineElements[2]) {
                 "RELATED" -> {
-                    val sourceToTarget = sourceArtist.related_artists.indexOf(targetArtist)
-                    val targetToSource = targetArtist.related_artists.indexOf(sourceArtist)
+                    val sourceToTarget = sourceArtist.related_artists?.indexOf(targetArtist) ?: -1
+                    val targetToSource = targetArtist.related_artists?.indexOf(sourceArtist) ?: -1
                     items.add(
                         BundleLineInfo(
                             sourceArtist = sourceArtist,
                             targetArtist = targetArtist,
-                            sToT = sourceToTarget,
-                            tToS = targetToSource,
+                            sToT = if (sourceToTarget == -1) null else sourceToTarget,
+                            tToS = if (targetToSource == -1) null else targetToSource,
                             linkType = LinkType.RELATED
                         )
                     )

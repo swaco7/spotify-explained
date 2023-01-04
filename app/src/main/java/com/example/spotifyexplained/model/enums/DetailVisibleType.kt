@@ -7,5 +7,6 @@ enum class DetailVisibleType(val value: Int) {
     LINEGENRE(4),
     LINEFEATURE(5),
     INFO(6),
-    LINEBUNDLE(7)
+    LINEBUNDLE(7),
+    COLORINFO(8)
 }

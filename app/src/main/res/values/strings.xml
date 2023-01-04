@@ -89,7 +89,13 @@
         Application offers tracks based on user\'s music and realtime feedback (positive, neutral or negative). \n\n
         User can save created playlist to Spotify app.
     </string>
-    <string name="track_detail_attribute_similarity_info">Absolute - actual value mapped to interval 0\-100.\n\nRelative - value relative to average from "random" set of tracks, mapped to interval 0\-100</string>
+    <string name="track_detail_most_similar_overall">"Overall similarity means the similarity across all audio features to the current track. Value is mapped to interval 0-100. " \n\n
+                    "● First track is the current track, " \n\n
+                    "● 2-5 are the most similar tracks from user's music, " \n\n
+                    "● 6th is the least similar user's track, " \n\n
+                    "● 7th is the similarity of \"artificial\" track with features values consisting of average from user's music" \n\n
+                    "● Last one is the similarity of \"artificial\" track with features values consisting of average from random set of tracks"</string>
+    <string name="track_detail_attribute_similarity_info">○ Absolute - actual similarity value mapped to interval 0\-100.\n\n● Relative - similarity value relative to average from "random" set of tracks, mapped to interval 0\-100.</string>
     <string name="settings_features_info_text">Set weight for each audio feature type.\nWeight set to 0 means that audio feature is not taken into consideration for selection of the tracks</string>
     <string name="spotify">Spotify</string>
     <string name="connection_dialog_message">Something went wrong. Check your connection and try again.</string>
@@ -101,4 +107,17 @@
     <string name="tracks">Tracks</string>
     <string name="artists">Artists</string>
     <string name="genres">Genres</string>
+    <string name="combined_nodata">No data to display. Select seeds in settings tab and press reload.</string>
+    <string name="our_recommendations">Our recommendations</string>
+    <string name="your_music">Your music</string>
+    <string name="spotify_recommend_text">Spotify recommend</string>
+    <string name="playlist_creation">Playlist creation</string>
+    <string name="top_genres_lc">Top genres</string>
+    <string name="top_artists">Top artists</string>
+    <string name="tracks_home_dropdown">Tracks</string>
+    <string name="artists_home_dropdown">Artists</string>
+    <string name="no_data_to_display">No data to display</string>
+    <string name="logout_button">LOGOUT</string>
+    <string name="something_wrong">Something went wrong</string>
+    <string name="forbidden">Your account does not have necessary permission.</string>
 </resources>

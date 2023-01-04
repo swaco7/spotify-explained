@@ -52,7 +52,7 @@ class SimilarTracksByAttributeAdapter(var items: List<TrackValue>, var trackDeta
     inner class ViewHolder(val binding: SimilarByAttrRowBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: TrackValue) {
             binding.name = item.name
-            binding.value = String.format("%d", item.value.toInt())
+            binding.value = String.format("%.1f", item.value)
             binding.artist = item.artistName
             binding.imageUrl = item.imageUrl
             binding.trackId = item.trackId
@@ -64,7 +64,7 @@ class SimilarTracksByAttributeAdapter(var items: List<TrackValue>, var trackDeta
     inner class ViewHolderNoImage(val binding: SimilarByAttrRowTextBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: TrackValue) {
             binding.name = item.name
-            binding.value = String.format("%d", item.value.toInt())
+            binding.value = String.format("%.1f", item.value)
             binding.executePendingBindings()
         }
     }

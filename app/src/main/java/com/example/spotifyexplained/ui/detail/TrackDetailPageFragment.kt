@@ -25,9 +25,9 @@ import com.example.spotifyexplained.general.App
 import com.example.spotifyexplained.general.Config
 import com.example.spotifyexplained.general.TrackDetailClickHandler
 import com.example.spotifyexplained.model.*
-import com.example.spotifyexplained.services.AudioPage
-import com.example.spotifyexplained.services.HorizontalBarChart
-import com.example.spotifyexplained.services.RadarChart
+import com.example.spotifyexplained.html.AudioPage
+import com.example.spotifyexplained.html.HorizontalBarChart
+import com.example.spotifyexplained.html.RadarChart
 import com.example.spotifyexplained.ui.general.HelpDialogFragment
 import com.example.spotifyexplained.general.TrackViewModelFactory
 import com.example.spotifyexplained.model.enums.AudioFeatureType
@@ -44,6 +44,7 @@ import java.util.*
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlin.math.max
 
 /**
  * Fragment dedicated to the detail page of the track
@@ -80,6 +81,7 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
         val tracksAdapter = SimilarTracksAdapter(viewModel.similarTracks.value!!, this)
         similarTracksList.adapter = tracksAdapter
         similarTracksList.layoutManager = LinearLayoutManager(context)
+        viewModel.similarTracks.observe(viewLifecycleOwner, tracksAdapter::updateData)
 
         // Similar tracks by attribute list
         val similarTracksByAttribute : RecyclerView = binding.trackByAttributeList
@@ -90,6 +92,8 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
 
         viewModel.radarData.observe(viewLifecycleOwner) {
             if (it.tracksWithFeatures.isNotEmpty()) {
+                val currentTrack = viewModel.radarData.value!!.tracksWithFeatures[0]
+                viewModel.currentTrackTitle.value = "${currentTrack.track.trackName} - ${currentTrack.track.artists[0].artistName}"
                 drawD3Graph(viewModel.radarData.value!!)
                 if (viewModel.recommendedTrack.value!!.preview_url != null) {
                     showPreview(viewModel.recommendedTrack.value!!)
@@ -105,6 +109,11 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
             if (it.isNotEmpty()) {
                 drawD3GraphBar(viewModel.barData.value!!)
             }
+        }
+        binding.infoHeader.setOnClickListener {
+            val dialog = HelpDialogFragment(resources.getString(R.string.track_detail_most_similar_overall))
+            val fragmentManager = requireActivity().supportFragmentManager
+            dialog.show(fragmentManager, "help")
         }
         binding.infoSwitch.setOnClickListener {
             val dialog = HelpDialogFragment(requireActivity().resources.getString(R.string.track_detail_attribute_similarity_info))
@@ -158,17 +167,21 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
     }
 
     override fun onDestroy() {
-        assertAppRemoteConnected().let {
-            it.playerApi
-                .playerState
-                .setResultCallback { playerState ->
-                    if (!playerState.isPaused) {
-                        it.playerApi
-                            .pause()
-                            .setResultCallback {}
-                            .setErrorCallback(errorCallback)
+        try {
+            assertAppRemoteConnected().let {
+                it.playerApi
+                    .playerState
+                    .setResultCallback { playerState ->
+                        if (!playerState.isPaused) {
+                            it.playerApi
+                                .pause()
+                                .setResultCallback {}
+                                .setErrorCallback(errorCallback)
+                        }
                     }
-                }
+            }
+        } catch (e : SpotifyDisconnectedException){
+
         }
         //SpotifyAppRemote.disconnect(spotifyAppRemote)
         super.onDestroy()
@@ -413,14 +426,20 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
      */
     override fun onTrackClick(trackName: String?) {
         val index = viewModel.radarData.value!!.tracksWithFeatures.indexOfFirst { it.track.trackName == trackName }
-        chosenIndex = when {
+        when {
             index != -1 -> {
-                index
+                chosenIndex = index
+                val currentTrack = viewModel.radarData.value!!.tracksWithFeatures[index]
+                viewModel.currentTrackTitle.value = "${currentTrack.track.trackName} - ${currentTrack.track.artists[0].artistName}"
             }
-            trackName == "Average" -> {
-                6
+            trackName == resources.getString(R.string.average_of_yours) -> {
+                chosenIndex = 6
+                viewModel.currentTrackTitle.value = resources.getString(R.string.average_of_yours)
             }
-            else -> 7
+            else -> {
+                chosenIndex = 7
+                viewModel.currentTrackTitle.value = resources.getString(R.string.average_general)
+            }
         }
         Log.e("choseIndex", chosenIndex.toString())
         drawD3Graph(viewModel.radarData.value!!)
@@ -441,15 +460,37 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
      */
     @SuppressLint("SetJavaScriptEnabled")
     private fun drawD3Graph(data: RadarChartData) {
+        val currentRadarData = data.copy()
+        val colors = mutableListOf("#177ADF", "#2CBA3D", "#2CB9BA", "#2C49BA", "#752DB4", "#CC333F", "#FFDB58", "#FFA500")
+        if (chosenIndex < Config.detailAllCount + 1) {
+            val currentData = currentRadarData.tracksWithFeatures[chosenIndex]
+            val currentColor = colors[chosenIndex]
+            val currentList = currentRadarData.tracksWithFeatures.toMutableList()
+            currentList.remove(currentList[chosenIndex])
+            colors.removeAt(chosenIndex)
+            currentList.add(currentData)
+            colors.add(Config.detailAllCount + 2, currentColor)
+            currentRadarData.tracksWithFeatures = currentList
+        } else {
+            if (chosenIndex == Config.detailAllCount + 1){
+                val currentColor = colors[chosenIndex]
+                colors.removeAt(Config.detailAllCount + 1)
+                colors.add(Config.detailAllCount + 2, currentColor)
+            }
+        }
+        currentRadarData.chosenIndex = chosenIndex
         webView.settings.javaScriptEnabled = true
         val displayMetrics = resources.displayMetrics
         val rawHtml = RadarChart.getHeader() +
                 RadarChart.getBody() +
                 RadarChart.getChartDesignHeader(
-                    (displayMetrics.widthPixels / displayMetrics.density).toInt() - 100, chosenIndex
+                    width = (displayMetrics.widthPixels / displayMetrics.density).toInt() - 100,
+                    selected = Config.detailAllCount + 2,
+                    selectedTitle = max(Config.detailAllCount,chosenIndex),
+                    color = colors
                 ) +
-                "var data = $data; \n" +
-                "var tracks = ${data.tracksToString()}; \n" +
+                "var data = ${currentRadarData}; \n" +
+                "var tracks = ${currentRadarData.tracksToString()}; \n" +
                 RadarChart.getChartDesignFooter() +
                 RadarChart.getFooter()
         val encodedHtml = Base64.getEncoder().encodeToString(rawHtml.toByteArray())

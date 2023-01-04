@@ -20,7 +20,7 @@ import com.example.spotifyexplained.adapter.FeatureSettingsAdapter
 import com.example.spotifyexplained.adapter.FeaturesAdapter
 import com.example.spotifyexplained.adapter.TrackFeatureBundleAdapter
 import com.example.spotifyexplained.adapter.TracksRecommendedBaseDatabaseAdapter
-import com.example.spotifyexplained.database.TrackCustomEntity
+import com.example.spotifyexplained.database.entity.TrackCustomEntity
 import com.example.spotifyexplained.databinding.FragmentRecommendCustomSettingsBinding
 import com.example.spotifyexplained.general.*
 import com.example.spotifyexplained.model.*
@@ -29,10 +29,12 @@ import com.example.spotifyexplained.general.TrackDatabaseViewModelFactory
 import com.example.spotifyexplained.model.enums.BundleItemType
 import com.example.spotifyexplained.model.enums.LoadingState
 import com.example.spotifyexplained.model.enums.ZoomType
-import com.example.spotifyexplained.services.GraphHtmlBuilder
+import com.example.spotifyexplained.html.GraphHtmlBuilder
 import com.faltenreich.skeletonlayout.Skeleton
 import com.faltenreich.skeletonlayout.applySkeleton
+import com.google.android.material.snackbar.Snackbar
 import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * Fragment dedicated to recommendations from custom recommender system based on similarity with user's tracks according to settings
@@ -52,7 +54,10 @@ class CustomRecommendSettingsFragment : Fragment(), TrackDetailClickHandler, Gra
     private val hideDetailInfoFunc = { this.hideDetailInfo() }
     private val finishLoadingFunc = { this.finishLoading() }
     private val showLineDetailInfoFunc = { _: String -> this.showLineDetailInfo() }
+    private val showMetricsInfoFunc = {message: String -> this.showMetrics(message)}
     private lateinit var skeleton: Skeleton
+    private var dataProvided: Boolean = false
+    private var metricResults = mutableListOf<String>()
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
@@ -131,17 +136,27 @@ class CustomRecommendSettingsFragment : Fragment(), TrackDetailClickHandler, Gra
             adapter.submitList(null)
             viewModel.clearSpecificData()
         }
-        val expandFunc = { expanded : Boolean -> (context as MainActivity).viewModel.expanded.value = !expanded}
-        val mGestureDetector = GestureDetectorCompat(context, GestureListener(expandFunc))
-        binding.buttonLayout.setOnTouchListener { _, event ->
-            mGestureDetector.onTouchEvent(event)
-            true
-        }
         viewModel.loadingState.observe(viewLifecycleOwner) {
             if (it == LoadingState.SUCCESS){
                 onDataLoaded()
             } else if (it == LoadingState.LOADING){
                 skeleton.showSkeleton()
+            } else if (it == LoadingState.RELOADED){
+                showSnackBar("Data successfully loaded")
+            }
+        }
+        binding.metricsButton.setOnClickListener {
+            dataProvided = false
+            calcMetrics(0)
+        }
+        binding.metricsButton.setOnLongClickListener {
+            dataProvided = true
+            calcMetrics(0)
+            true
+        }
+        viewModel.metricIndex.observe(viewLifecycleOwner){
+            if (it > 0){
+                calcMetrics(it)
             }
         }
         return binding.root
@@ -149,6 +164,12 @@ class CustomRecommendSettingsFragment : Fragment(), TrackDetailClickHandler, Gra
 
     private fun onDataLoaded(){
         skeleton.showOriginal()
+    }
+
+    private fun showSnackBar(message: String){
+        val snackBar = Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
+        snackBar.view.translationY = -60 * (resources.displayMetrics.densityDpi / 160).toFloat()
+        snackBar.show()
     }
 
     /**
@@ -248,5 +269,62 @@ class CustomRecommendSettingsFragment : Fragment(), TrackDetailClickHandler, Gra
 
     override fun onCloseBundleClick() {
         hideDetailInfo()
+    }
+
+    //-------- Metrics code ----------------//
+    private fun showMetrics(message: String?) {
+        (context as MainActivity).runOnUiThread {
+            val latexOutput = message!!.replace(",", " & ") + "\\\\"
+            metricResults.add(Config.factorsFeatures[viewModel.metricIndex.value!! / (Config.manyBodyFeatures.size * Config.collisionsFeatures.size)].toString() + " & " + latexOutput)
+            Log.e("output", Config.factorsFeatures[viewModel.metricIndex.value!! / (Config.manyBodyFeatures.size * Config.collisionsFeatures.size)].toString() + " & " + latexOutput)
+            if (viewModel.metricIndex.value!! < ((Config.manyBodyFeatures.size * Config.collisionsFeatures.size * Config.factorsFeatures.size) - 1)) {
+                viewModel.metricIndex.value = viewModel.metricIndex.value!! + 1
+            } else {
+                Log.e("finalResult", metricResults.joinToString("\n"))
+            }
+            viewModel.graphLoadingState.value = LoadingState.GRAPH_LOADED
+        }
+    }
+
+    private fun calcMetrics(index : Int){
+        val distanceFact = if (index == 0) Config.forceDistanceFactor else Config.factorsFeatures[(index - 1) / (Config.manyBodyFeatures.size * Config.collisionsFeatures.size)]
+        viewModel.linksDistance.value = ArrayList(viewModel.linksDistance.value!!.map {
+            D3ForceLinkDistance(it.source,
+                it.target,
+                it.value,
+                (it.distance / distanceFact)*Config.factorsFeatures[index / (Config.manyBodyFeatures.size * Config.collisionsFeatures.size)])
+        })
+        drawMetrics(viewModel.nodes.value!!,
+            viewModel.linksDistance.value!!,
+            Config.manyBodyFeatures[(index / Config.collisionsFeatures.size) % Config.factorsFeatures.size],
+            Config.collisionsFeatures[(index % Config.collisionsFeatures.size)])
+    }
+
+    private fun drawMetrics(
+        nodes: ArrayList<D3ForceNode>,
+        links: ArrayList<D3ForceLinkDistance>,
+        manyBody : Int,
+        colls: Float,
+    ) {
+        val encodedHtml = GraphHtmlBuilder.buildFeaturesMetricsGraph(
+            links,
+            nodes,
+            manyBody,
+            colls,
+            dataProvided,
+            Config.datasetDenseLarge
+        )
+        webView.loadData(encodedHtml, Config.mimeType, Config.encoding)
+        webView.addJavascriptInterface(
+            JsWebInterface(
+                requireContext(),
+                showDetailInfoFunc,
+                hideDetailInfoFunc,
+                showBundleDetailInfoFunc,
+                finishLoadingFunc,
+                showLineDetailInfoFunc,
+                showMetricsInfoFunc
+            ), Config.jsAppName
+        )
     }
 }

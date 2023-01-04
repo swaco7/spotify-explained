@@ -4,7 +4,7 @@ import android.app.Activity
 import android.content.Context
 import androidx.lifecycle.*
 import com.example.spotifyexplained.activity.MainActivity
-import com.example.spotifyexplained.database.GenreRecommendEntity
+import com.example.spotifyexplained.database.entity.GenreRecommendEntity
 import com.example.spotifyexplained.general.Config
 import com.example.spotifyexplained.general.GraphInfoHelper
 import com.example.spotifyexplained.general.Helper
@@ -12,7 +12,7 @@ import com.example.spotifyexplained.general.VisualTabClickHandler
 import com.example.spotifyexplained.model.*
 import com.example.spotifyexplained.model.enums.*
 import com.example.spotifyexplained.repository.TrackRepository
-import com.example.spotifyexplained.services.ApiHelper
+import com.example.spotifyexplained.services.ApiRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -133,7 +133,7 @@ class GenresRecommendViewModel(activity: Activity, private val repository: Track
      * Assigns artist data to each recommended track
      */
     private suspend fun getRecommendedTracksArtistGenres() {
-        val response = ApiHelper.getArtistWithGenres(recommendedTracks.toMutableList(), context!!) ?: return
+        val response = ApiRepository.getArtistWithGenres(recommendedTracks.toMutableList(), context!!) ?: return
         for (i in response.artists.indices) {
             recommendedTracks[i].trackGenres = response.artists[i].genres
             recommendedTracks[i].artists[0].genres = response.artists[i].genres
@@ -147,7 +147,7 @@ class GenresRecommendViewModel(activity: Activity, private val repository: Track
      */
     private suspend fun getRecommendedTracksRelatedArtists() {
         for (track in recommendedTracks) {
-            val relatedArtists = ApiHelper.getRelatedArtists(track.artists[0].artistId, context!!)
+            val relatedArtists = ApiRepository.getRelatedArtists(track.artists[0].artistId, context!!)
             track.artists[0].related_artists = relatedArtists?.toList() ?: mutableListOf()
         }
     }
@@ -164,7 +164,7 @@ class GenresRecommendViewModel(activity: Activity, private val repository: Track
      */
     private suspend fun recommendTracksGetFeatures() {
         val response =
-            ApiHelper.getTracksAudioFeatures(recommendedTracks, context!!)
+            ApiRepository.getTracksAudioFeatures(recommendedTracks, context!!)
                 ?: return
         recommendedTracksFeatures = response.toMutableList()
     }
@@ -183,7 +183,7 @@ class GenresRecommendViewModel(activity: Activity, private val repository: Track
         allGraphArtistNodes.value = forceGraph.nodeArtists.toMutableList()
         if (!settings.value!!.artistsSelected) {
             allGraphTrackNodes.value =
-                ApiHelper.getTracksAudioFeatures(forceGraph.nodeTracks, context!!)?.toMutableList() ?: return
+                ApiRepository.getTracksAudioFeatures(forceGraph.nodeTracks, context!!)?.toMutableList() ?: return
         }
         links.value = forceGraph.links
     }
@@ -223,7 +223,7 @@ class GenresRecommendViewModel(activity: Activity, private val repository: Track
     fun showBundleDetailInfo(nodeIndices: String, currentIndex: String): MutableList<BundleGraphItem> {
         detailViewVisible.value = true
         detailVisibleType.value = DetailVisibleType.BUNDLE
-        return GraphInfoHelper.showBundleDetailInfo(nodeIndices, currentIndex, allGraphArtistNodes.value!!, allGraphTrackNodes.value!!.map { it.track }, recommendedTracks, genreColorMap)
+        return GraphInfoHelper.showBundleDetailInfo(nodeIndices, currentIndex, allGraphArtistNodes.value!!, allGraphTrackNodes.value?.map { it.track } ?: listOf(), recommendedTracks, genreColorMap)
     }
     /**
      * Prepares data for line detail window
@@ -233,11 +233,11 @@ class GenresRecommendViewModel(activity: Activity, private val repository: Track
         detailViewVisible.value = true
         when (nodeIndices!!.split(",").last()) {
             "RELATED" -> {
-                lineInfo.value = GraphInfoHelper.showLineDetailInfo(nodeIndices, allGraphArtistNodes.value!!, allGraphTrackNodes.value!!.map { it.track })
+                lineInfo.value = GraphInfoHelper.showLineDetailInfo(nodeIndices, allGraphArtistNodes.value!!, allGraphTrackNodes.value ?: listOf())
                 detailVisibleType.value = DetailVisibleType.LINE
             }
             "GENRE" -> {
-                lineGenreInfo.value = GraphInfoHelper.showLineDetailGenreInfo(nodeIndices, allGraphArtistNodes.value!!, allGraphTrackNodes.value!!.map { it.track })
+                lineGenreInfo.value = GraphInfoHelper.showLineDetailGenreInfo(nodeIndices, allGraphArtistNodes.value!!, allGraphTrackNodes.value ?: listOf())
                 detailVisibleType.value = DetailVisibleType.LINEGENRE
             }
             "FEATURE" -> {
@@ -276,13 +276,13 @@ class GenresRecommendViewModel(activity: Activity, private val repository: Track
      *  Gets recommended tracks
      */
     private suspend fun recommendBasedOnGenres(){
-        recommendedTracks = ApiHelper.getRecommendsBasedOnGenres(getTopGenresSeeds().toMutableList(), context!!)?.tracks?.toList() ?: listOf()
+        recommendedTracks = ApiRepository.getRecommendsBasedOnGenres(getTopGenresSeeds().toMutableList(), context!!)?.tracks?.toList() ?: listOf()
     }
     /**
      *  @return user's top genres
      */
     private suspend fun getTopGenresSeeds() : List<String>{
-        return ApiHelper.getTopGenresSeeds(topArtists, context!!)
+        return ApiRepository.getTopGenresSeeds(topArtists, context!!)
     }
 
     /**

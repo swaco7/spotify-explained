@@ -79,6 +79,11 @@
             app:detailViewVisible="@{viewModel.detailViewVisible}"
             app:graphClickHandler="@{graphClickHandler}"/>
 
+        <include layout="@layout/reusable_color_info_layout"
+            app:detailVisibleType="@{viewModel.detailVisibleType}"
+            app:detailViewVisible="@{viewModel.detailViewVisible}"
+            app:graphClickHandler="@{graphClickHandler}"/>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -124,6 +129,13 @@
             app:detailVisibleType="@{viewModel.detailVisibleType}"
             app:detailViewVisible="@{viewModel.detailViewVisible}"
             app:graphClickHandler="@{graphClickHandler}"/>
+
+        <include layout="@layout/reusable_nodata_info"
+            android:layout_below="@+id/graph_controls_layout"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:visibility="@{viewModel.graphLoadingState == LoadingState.FAILURE ? View.VISIBLE : View.GONE}">
+        </include>
 
     </RelativeLayout>
 </layout>

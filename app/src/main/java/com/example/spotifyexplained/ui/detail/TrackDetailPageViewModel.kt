@@ -7,14 +7,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.spotifyexplained.R
 import com.example.spotifyexplained.activity.MainActivity
-import com.example.spotifyexplained.database.RandomTrackEntity
+import com.example.spotifyexplained.database.entity.RandomTrackEntity
 import com.example.spotifyexplained.general.ColorHelper
 import com.example.spotifyexplained.general.Config
 import com.example.spotifyexplained.general.Helper
 import com.example.spotifyexplained.model.*
 import com.example.spotifyexplained.model.enums.LoadingState
 import com.example.spotifyexplained.repository.TrackRepository
-import com.example.spotifyexplained.services.ApiHelper
+import com.example.spotifyexplained.services.ApiRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -29,6 +29,7 @@ class TrackDetailPageViewModel(activity: Activity, private var trackId: String, 
     val isPremium = MutableLiveData<Boolean>().apply {}
     val isSaved = MutableLiveData<Boolean>().apply { value = false }
     val currentTrackUri = MutableLiveData<String>().apply { value = "" }
+    val currentTrackTitle = MutableLiveData<String>().apply { value = "" }
 
     val topTracks: MutableLiveData<List<Track>> by lazy {
         MutableLiveData<List<Track>>(mutableListOf())
@@ -54,12 +55,12 @@ class TrackDetailPageViewModel(activity: Activity, private var trackId: String, 
     private val context: Context? by lazy {
         activity
     }
-    private lateinit var minMax: List<Pair<Double, Double>>
-    private lateinit var minMaxRelative: List<Pair<Double, Double>>
-    private lateinit var averageValues: MutableList<Double>
-    private lateinit var generalAverageValues: MutableList<Double>
-    private lateinit var topTracksWithFeatures : List<TrackAudioFeatures>
-    private lateinit var generalSetTracksWithFeatures: List<TrackAudioFeatures>
+    private var minMax: List<Pair<Double, Double>> = listOf()
+    private var minMaxRelative: List<Pair<Double, Double>> = listOf()
+    private var averageValues: MutableList<Double> = mutableListOf()
+    private var generalAverageValues: MutableList<Double> = mutableListOf()
+    private var topTracksWithFeatures : List<TrackAudioFeatures> = listOf()
+    private var generalSetTracksWithFeatures: List<TrackAudioFeatures> = listOf()
     private var valuesRelative = false
 
     init {
@@ -88,14 +89,15 @@ class TrackDetailPageViewModel(activity: Activity, private var trackId: String, 
      * Get track object for trackId
      */
     private suspend fun getTrack() {
-        recommendedTrack.value = ApiHelper.getTracks(trackId, context!!)
+        recommendedTrack.value = ApiRepository.getTracks(trackId, context!!)
     }
 
     /**
      * Get audio features for tracks
      */
     private suspend fun prepareSections() {
-        val list = (context as MainActivity).viewModel.topTracks.value!! + (ApiHelper.getTracksAudioFeatures(listOf(recommendedTrack.value!!), context!!)?.toMutableList() ?: mutableListOf())
+        if (recommendedTrack.value == null) return
+        val list = (context as MainActivity).viewModel.topTracks.value!! + (ApiRepository.getTracksAudioFeatures(listOf(recommendedTrack.value!!) , context!!)?.toMutableList() ?: mutableListOf())
         topTracksWithFeatures = list
         minMax = Helper.getMinMaxFeatures(list)
         averageValues = Helper.getAverageFeatures(list)
@@ -150,10 +152,13 @@ class TrackDetailPageViewModel(activity: Activity, private var trackId: String, 
         for (track in features.dropLast(1)) {
             map.add(Pair(track, Helper.compareTrackFeatures(features.last(), track, minMaxRelative)))
         }
-        val result = map.filter { it.first.track != features.last().track}.sortedBy { (_, value) -> value }.map { it.first }.take(4)
+        val result = map.filter { it.first.track != features.last().track}.sortedBy { (_, value) -> value }.map { it.first }.take(Config.detailAllCount - 1)
         val mostSimilarList = mutableListOf<TrackAudioFeatures>()
         mostSimilarList.addAll(0, result)
-        mostSimilarList.addAll(map.sortedBy { (_, value) -> value }.map { it.first }.takeLast(1))
+        if (map.count() > Config.detailAllCount) {
+            mostSimilarList.addAll(map.sortedBy { (_, value) -> value }.map { it.first }
+                .takeLast(1))
+        }
         mostSimilarList.add(0, features.last())
         return mostSimilarList.toMutableList()
     }
@@ -169,9 +174,9 @@ class TrackDetailPageViewModel(activity: Activity, private var trackId: String, 
         for (index in 0 until 10){
             val randomChar = Helper.random.nextInt(0, charPool.size)
             val offset = Helper.random.nextInt(0, 100)
-            generalTracks.addAll(ApiHelper.getSearchTracks("%${charPool[randomChar]}%",  limit = 2, offset = offset, "track", context!!)!!)
+            generalTracks.addAll(ApiRepository.getSearchTracks("%${charPool[randomChar]}%",  limit = 2, offset = offset, "track", context!!)!!)
         }
-        val generalWithFeatures = ApiHelper.getTracksAudioFeatures(generalTracks, context!!)
+        val generalWithFeatures = ApiRepository.getTracksAudioFeatures(generalTracks, context!!)
         insertRandomTracks(generalWithFeatures!!.toMutableList())
     }
 
@@ -186,6 +191,7 @@ class TrackDetailPageViewModel(activity: Activity, private var trackId: String, 
      * @param relative flag whether we compute absolute or relative value
      */
     private fun findMostSimilarByAttribute(tracks: List<TrackAudioFeatures>, selectedFeatureIndex: Int, relative: Boolean) {
+        if (recommendedTrack.value == null) return
         val generalFeatureValue = generalAverageValues[selectedFeatureIndex]
         val mappedTracks = tracks.dropLast(1).map { TrackValue(
             it.track.trackId,

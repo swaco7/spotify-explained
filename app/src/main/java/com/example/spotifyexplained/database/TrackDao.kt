@@ -2,6 +2,7 @@ package com.example.spotifyexplained.database
 
 import androidx.room.*
 import com.example.spotifyexplained.database.*
+import com.example.spotifyexplained.database.entity.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao

@@ -21,15 +21,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.spotifyexplained.R
 import com.example.spotifyexplained.activity.MainActivity
 import com.example.spotifyexplained.adapter.TracksRecommendedBaseDatabaseAdapter
-import com.example.spotifyexplained.database.PlaylistTrackEntity
+import com.example.spotifyexplained.database.entity.PlaylistTrackEntity
 import com.example.spotifyexplained.databinding.FragmentPlaylistBinding
 import com.example.spotifyexplained.general.App
 import com.example.spotifyexplained.model.Track
 import com.example.spotifyexplained.general.TrackDetailClickHandler
 import com.example.spotifyexplained.general.Config
 import com.example.spotifyexplained.model.enums.TrackFeedbackType
-import com.example.spotifyexplained.services.ApiHelper
-import com.example.spotifyexplained.services.AudioPage
+import com.example.spotifyexplained.services.ApiRepository
+import com.example.spotifyexplained.html.AudioPage
 import com.example.spotifyexplained.ui.detail.TrackProgressBar
 import com.example.spotifyexplained.ui.general.HelpDialogFragment
 import com.example.spotifyexplained.general.TrackDatabaseViewModelFactory
@@ -208,14 +208,14 @@ class PlaylistFragment : Fragment(), TrackDetailClickHandler{
             .setPositiveButton(getString(R.string.create)) { _, _ ->
                 if (nameEditText.text.isNotEmpty()) {
                     lifecycleScope.launch {
-                        val playlist = ApiHelper.createPlaylist(
+                        val playlist = ApiRepository.createPlaylist(
                             nameEditText.text.toString(),
                             description.text.toString(),
                             public.isChecked,
                             collaborative.isChecked,
                             context!!
                         )
-                        val snapshot = ApiHelper.addTracksToPlaylist(
+                        val snapshot = ApiRepository.addTracksToPlaylist(
                             playlist!!.id,
                             viewModel.playlistTracksLiveData.value!!.filter { it.trackType == TrackFeedbackType.POSITIVE }
                                 .map { it.track }.toMutableList(),

@@ -12,6 +12,9 @@
             name="detailViewVisible"
             type="Boolean" />
         <variable
+            name="adapter"
+            type="com.example.spotifyexplained.adapter.BundleLineAdapter" />
+        <variable
             name="graphClickHandler"
             type="com.example.spotifyexplained.general.GraphClickHandler"/>
 
@@ -60,8 +63,8 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/bundleLineRecycler"
                 android:layout_below="@id/header_layout"
-                android:paddingBottom="60dp"
-                android:clipToPadding="false"
+                android:layout_marginBottom="5dp"
+                adapter="@{adapter}"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
             </androidx.recyclerview.widget.RecyclerView>
 

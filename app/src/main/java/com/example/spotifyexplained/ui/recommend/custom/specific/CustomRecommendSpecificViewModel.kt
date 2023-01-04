@@ -4,12 +4,12 @@ import android.app.Activity
 import android.content.Context
 import androidx.lifecycle.*
 import com.example.spotifyexplained.activity.MainActivity
-import com.example.spotifyexplained.database.TrackInPoolEntity
-import com.example.spotifyexplained.database.TrackSpecificEntity
+import com.example.spotifyexplained.database.entity.TrackInPoolEntity
+import com.example.spotifyexplained.database.entity.TrackSpecificEntity
 import com.example.spotifyexplained.general.Config
 import com.example.spotifyexplained.general.ExpandClickHandler
 import com.example.spotifyexplained.model.*
-import com.example.spotifyexplained.services.ApiHelper
+import com.example.spotifyexplained.services.ApiRepository
 import com.example.spotifyexplained.general.Helper
 import com.example.spotifyexplained.general.VisualTabClickHandler
 import com.example.spotifyexplained.model.enums.DetailVisibleType
@@ -78,10 +78,10 @@ class CustomRecommendSpecificViewModel(activity: Activity, private val repositor
     }
 
     private suspend fun getUserTracks() {
-        val topTracks = ApiHelper.getUserTopTracks(50, context as MainActivity) ?: mutableListOf()
-        val savedTracks = ApiHelper.getUserSavedTracks(Config.savedTracksLimit, context!!) ?: mutableListOf()
+        val topTracks = ApiRepository.getUserTopTracks(50, context as MainActivity) ?: mutableListOf()
+        val savedTracks = ApiRepository.getUserSavedTracks(Config.savedTracksLimit, context!!) ?: mutableListOf()
         val userTracks =  (savedTracks + topTracks).distinctBy { it.trackId }
-        userTracksAudioFeatures = ApiHelper.getTracksAudioFeatures(userTracks.toMutableList(), context!!) ?: listOf()
+        userTracksAudioFeatures = ApiRepository.getTracksAudioFeatures(userTracks.toMutableList(), context!!) ?: listOf()
     }
 
     /**
@@ -150,7 +150,7 @@ class CustomRecommendSpecificViewModel(activity: Activity, private val repositor
      * Assigns artist data to each recommended track
      */
     private suspend fun getArtistGenres(tracks: List<TrackAudioFeatures>) : List<TrackAudioFeatures>? {
-        val response = ApiHelper.getArtistWithGenres(tracks.map { it.track }.toMutableList(), context!!) ?: return null
+        val response = ApiRepository.getArtistWithGenres(tracks.map { it.track }.toMutableList(), context!!) ?: return null
         for (i in response.artists.indices) {
             tracks[i].track.trackGenres = response.artists[i].genres
             tracks[i].track.artists[0].artistPopularity = response.artists[i].artistPopularity
@@ -162,7 +162,7 @@ class CustomRecommendSpecificViewModel(activity: Activity, private val repositor
      * Prepares nodes, edges, colors for graph
      */
     private fun prepareD3RelationsDistance() {
-        val allGraphData = Helper.prepareD3RelationsDistance(recommendedTracksLocal.map { TrackAudioFeatures(it.track, it.features)}.toMutableList())
+        val allGraphData = Helper.prepareD3RelationsDistance(recommendedTracksLocal.map { TrackAudioFeatures(it.track, it.features)}.toMutableList(), Config.forceDistanceFactor)
         nodes.value = allGraphData.first
         linksDistance.value = allGraphData.second
         allGraphNodes.value = allGraphData.third.toMutableList()

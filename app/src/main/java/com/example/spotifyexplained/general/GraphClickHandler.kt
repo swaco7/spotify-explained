@@ -18,4 +18,6 @@ interface GraphClickHandler {
     fun onRelatedIconClick() {}
 
     fun onInfoIconClick() {}
+
+    fun onColorInfoClick() {}
 }

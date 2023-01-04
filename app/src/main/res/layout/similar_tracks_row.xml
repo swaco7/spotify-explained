@@ -54,6 +54,6 @@
             android:textSize="13sp"
             android:layout_marginEnd="50dp"
             android:layout_gravity="center_vertical"
-            android:text='@{String.format("%.2f", similarity)}' />
+            android:text='@{String.format("%.1f", similarity * 100)}' />
     </LinearLayout>
 </layout>

@@ -15,7 +15,7 @@ import com.example.spotifyexplained.model.enums.DetailVisibleType
 import com.example.spotifyexplained.model.enums.LoadingState
 import com.example.spotifyexplained.model.enums.VisualState
 import com.example.spotifyexplained.model.enums.ZoomType
-import com.example.spotifyexplained.services.ApiHelper
+import com.example.spotifyexplained.services.ApiRepository
 import kotlinx.coroutines.launch
 
 /**
@@ -90,7 +90,7 @@ class TopArtistsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
     }
 
     private suspend fun getUserTopArtists(){
-        artists.value = ApiHelper.getUserTopArtists(50, context!!)
+        artists.value = ApiRepository.getUserTopArtists(50, context!!)
     }
 
     /**
@@ -100,7 +100,7 @@ class TopArtistsViewModel(activity: Activity) : ViewModel(), VisualTabClickHandl
         for (artist in artists.value ?: listOf()) {
             val savedArtist = (context as MainActivity).viewModel.topArtists.value!!.firstOrNull { it.artistId == artist.artistId }
             artist.related_artists = savedArtist?.related_artists
-                ?: (ApiHelper.getRelatedArtists(artist.artistId, context!!)?.toList() ?: mutableListOf())
+                ?: (ApiRepository.getRelatedArtists(artist.artistId, context!!)?.toList() ?: mutableListOf())
         }
     }
 

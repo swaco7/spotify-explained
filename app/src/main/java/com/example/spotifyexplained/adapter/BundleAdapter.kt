@@ -4,10 +4,11 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.spotifyexplained.databinding.*
+import com.example.spotifyexplained.general.TrackDetailClickHandler
 import com.example.spotifyexplained.model.*
 import com.example.spotifyexplained.model.enums.BundleItemType
 
-class BundleAdapter(var items: List<BundleGraphItem>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class BundleAdapter(var items: List<BundleGraphItem>, var trackDetailClickHandler: TrackDetailClickHandler? = null) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -68,6 +69,7 @@ class BundleAdapter(var items: List<BundleGraphItem>) : RecyclerView.Adapter<Rec
             binding.trackName = item.track?.trackName ?: ""
             binding.track = item.track
             binding.genresAdapter = GenresBundleAdapter(item.genreColors)
+            binding.clickHandler = trackDetailClickHandler
             binding.executePendingBindings()
         }
     }

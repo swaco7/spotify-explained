@@ -6,4 +6,5 @@ enum class LoadingState {
     FAILURE,
     GRAPH_LOADED,
     SETTINGS_LOADED,
+    RELOADED
 }

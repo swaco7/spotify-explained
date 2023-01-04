@@ -19,15 +19,16 @@ import com.cruxlab.sectionedrecyclerview.lib.SectionHeaderLayout
 import com.example.spotifyexplained.R
 import com.example.spotifyexplained.activity.MainActivity
 import com.example.spotifyexplained.adapter.*
-import com.example.spotifyexplained.database.CombinedRecommendEntity
+import com.example.spotifyexplained.database.entity.CombinedRecommendEntity
 import com.example.spotifyexplained.databinding.FragmentRecommendCombinedBinding
 import com.example.spotifyexplained.general.*
 import com.example.spotifyexplained.model.*
 import com.example.spotifyexplained.ui.recommend.spotify.RecommendFragmentDirections
 import com.example.spotifyexplained.general.TrackDatabaseViewModelFactory
 import com.example.spotifyexplained.model.enums.*
-import com.example.spotifyexplained.services.GraphHtmlBuilder
+import com.example.spotifyexplained.html.GraphHtmlBuilder
 import com.faltenreich.skeletonlayout.applySkeleton
+import com.google.android.material.snackbar.Snackbar
 import java.util.*
 
 /**
@@ -46,12 +47,15 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
     private lateinit var genresList: RecyclerView
     private lateinit var sectionDataManager : SectionDataManager
     private lateinit var bundleLineInfoList: RecyclerView
+    private lateinit var colorInfoList: RecyclerView
     private val showDetailInfoFunc = { message: String -> this.showDetailInfo(message) }
     private val showBundleDetailInfoFunc = { tracks: String, message: String -> this.showBundleDetailInfo(tracks, message) }
     private val hideDetailInfoFunc = { this.hideDetailInfo() }
     private val finishLoadingFunc = { this.finishLoading() }
     private val showLineDetailInfoFunc = { message: String -> this.showLineDetailInfo(message) }
     private val showMetricsInfoFunc = {message: String -> this.showMetrics(message)}
+    private var dataProvided: Boolean = false
+    private var metricResults = mutableListOf<String>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         viewModel = ViewModelProvider(
@@ -80,6 +84,7 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
         featuresList = binding.root.findViewById(R.id.featuresLineRecycler)
         genresList = binding.root.findViewById(R.id.genresLineRecycler)
         bundleLineInfoList = binding.root.findViewById(R.id.bundleLineRecycler)
+        colorInfoList = binding.root.findViewById(R.id.colorInfoRecycler)
 
         //Main List
         adapter = TracksRecommendedBaseDatabaseAdapter(this)
@@ -117,6 +122,7 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
                     viewModel.links.value!!,
                     zoomType
                 )
+
             }
         }
         viewModel.links.observe(viewLifecycleOwner) {
@@ -192,10 +198,17 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
             }
         }
         viewModel.loadingState.observe(viewLifecycleOwner) {
-            if (it == LoadingState.SUCCESS){
-                skeleton.showOriginal()
-            } else if (it == LoadingState.LOADING){
-                skeleton.showSkeleton()
+            when (it) {
+                LoadingState.SUCCESS, LoadingState.FAILURE  -> {
+                    skeleton.showOriginal()
+                }
+                LoadingState.LOADING -> {
+                    skeleton.showSkeleton()
+                }
+                LoadingState.RELOADED -> {
+                    showSnackBar("Data successfully loaded")
+                }
+                else -> {}
             }
         }
 
@@ -205,7 +218,13 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
             }
         }
         binding.metricsButton.setOnClickListener {
+            dataProvided = false
             viewModel.prepareNodesAndEdgesForMetrics()
+        }
+        binding.metricsButton.setOnLongClickListener {
+            dataProvided = true
+            calcMetrics(0)
+            true
         }
         viewModel.metricIndex.observe(viewLifecycleOwner){
             if (it > 0){
@@ -249,6 +268,12 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
         val action = RecommendFragmentDirections.actionNavigationRecommendedSongsToFragmentRecommendTrackDetailPage(track!!.trackId)
         requireView().findNavController().navigate(action)
         hideDetailInfo()
+    }
+
+    private fun showSnackBar(message: String){
+        val snackBar = Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
+        snackBar.view.translationY = -60 * (resources.displayMetrics.densityDpi / 160).toFloat()
+        snackBar.show()
     }
 
     /**
@@ -313,7 +338,7 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
     private fun showBundleDetailInfo(nodeIndices: String, currentIndex: String) {
         (context as MainActivity).runOnUiThread {
             val bundleItems = viewModel.showBundleDetailInfo(nodeIndices, currentIndex)
-            bundleTrackList.adapter = BundleAdapter(bundleItems)
+            bundleTrackList.adapter = BundleAdapter(bundleItems, this)
         }
     }
 
@@ -396,10 +421,12 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
     //-------- Metrics code ----------------//
     private fun showMetrics(message: String?) {
         (context as MainActivity).runOnUiThread {
-            val latexOutput = message!!.replace(",", " & ")
-            Log.e("metrics", latexOutput)
-            if (viewModel.metricIndex.value!! < 15) {
+            val latexOutput = message!!.replace(",", " & ") + "\\\\"
+            metricResults.add(latexOutput)
+            if (viewModel.metricIndex.value!! < ((Config.manyBody.size * Config.collisions.size) - 1)) {
                 viewModel.metricIndex.value = viewModel.metricIndex.value!! + 1
+            } else {
+                Log.e("finalResult", metricResults.joinToString("\n"))
             }
         }
     }
@@ -412,13 +439,15 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
         nodes: ArrayList<D3ForceNode>,
         links: ArrayList<D3ForceLink>,
         manyBody : Int,
-        colls: Float
+        colls: Float,
     ) {
         val encodedHtml = GraphHtmlBuilder.buildMetricsGraph(
             links,
             nodes,
             manyBody,
-            colls
+            colls,
+            dataProvided,
+            Config.datasetDenseLarge
         )
         webView.loadData(encodedHtml, Config.mimeType, Config.encoding)
         webView.addJavascriptInterface(
@@ -432,5 +461,12 @@ class CombinedRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClic
                 showMetricsInfoFunc
             ), Config.jsAppName
         )
+    }
+
+    override fun onColorInfoClick() {
+        val result = ColorHelper.sortColorsByHue(viewModel.genreColorMap)
+        colorInfoList.adapter = GenreColorAdapter(result?.map { GenreColor(it.key, Helper.getColorFromMap(it.key, result)) })
+        viewModel.detailViewVisible.value = true
+        viewModel.detailVisibleType.value = DetailVisibleType.COLORINFO
     }
 }

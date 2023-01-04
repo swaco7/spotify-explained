@@ -103,14 +103,6 @@ class CustomRecommendBaseFragment : Fragment() {
             }
         }
 
-        val expandFunc = { expanded : Boolean -> (context as MainActivity).viewModel.expanded.value = !expanded }
-
-        val mGestureDetector = GestureDetectorCompat(context, GestureListener(expandFunc))
-
-        tabLayout.setOnTouchListener { _, event -> mGestureDetector.onTouchEvent(event)
-            true
-        }
-
         reloadButton.setOnClickListener {
             if (!(context as MainActivity).viewModel.poolIsLoading.value!!) {
                 viewModel.deleteCaches()

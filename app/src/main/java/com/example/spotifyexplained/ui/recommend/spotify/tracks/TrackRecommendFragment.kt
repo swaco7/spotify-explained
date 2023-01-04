@@ -1,6 +1,7 @@
 package com.example.spotifyexplained.ui.recommend.spotify.tracks
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,24 +17,24 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.spotifyexplained.R
 import com.example.spotifyexplained.activity.MainActivity
 import com.example.spotifyexplained.adapter.*
-import com.example.spotifyexplained.database.TrackRecommendEntity
+import com.example.spotifyexplained.database.entity.TrackRecommendEntity
 import com.example.spotifyexplained.databinding.FragmentRecommendTracksBinding
 import com.example.spotifyexplained.general.*
-import com.example.spotifyexplained.model.*
 import com.example.spotifyexplained.general.Config.encoding
 import com.example.spotifyexplained.general.Config.jsAppName
 import com.example.spotifyexplained.general.Config.mimeType
 import com.example.spotifyexplained.general.Config.trackRecommendCollisions
 import com.example.spotifyexplained.general.Config.trackRecommendManyBody
-import com.example.spotifyexplained.ui.recommend.spotify.RecommendFragmentDirections
-import com.example.spotifyexplained.general.TrackDatabaseViewModelFactory
+import com.example.spotifyexplained.html.GraphHtmlBuilder
+import com.example.spotifyexplained.model.*
 import com.example.spotifyexplained.model.enums.DetailVisibleType
 import com.example.spotifyexplained.model.enums.LoadingState
 import com.example.spotifyexplained.model.enums.SettingsItemType
 import com.example.spotifyexplained.model.enums.ZoomType
-import com.example.spotifyexplained.services.GraphHtmlBuilder
+import com.example.spotifyexplained.ui.recommend.spotify.RecommendFragmentDirections
 import com.faltenreich.skeletonlayout.applySkeleton
 import java.util.*
+import kotlin.collections.HashMap
 
 /**
     This fragment is for recommendations from Spotify based on track seed
@@ -50,6 +51,7 @@ class TrackRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickHa
     private lateinit var featuresList: RecyclerView
     private lateinit var genresList: RecyclerView
     private lateinit var bundleLineInfoList: RecyclerView
+    private lateinit var colorInfoList: RecyclerView
     private val showDetailInfoFunc = { message: String -> this.showDetailInfo(message) }
     private val showBundleDetailInfoFunc = { tracks: String, message: String -> this.showBundleDetailInfo(tracks, message) }
     private val hideDetailInfoFunc = { this.hideDetailInfo() }
@@ -82,6 +84,7 @@ class TrackRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickHa
         genresList = binding.root.findViewById(R.id.genresLineRecycler)
         bundleLineInfoList = binding.root.findViewById(R.id.bundleLineRecycler)
         bundleLineInfoList.addItemDecoration(DividerItemDecoration(bundleLineInfoList.context, LinearLayoutManager.VERTICAL))
+        colorInfoList = binding.root.findViewById(R.id.colorInfoRecycler)
 
         //Main List
         adapter = TracksRecommendedBaseDatabaseAdapter(this)
@@ -211,7 +214,7 @@ class TrackRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickHa
     private fun showBundleDetailInfo(nodeIndices: String, currentIndex: String) {
         (context as MainActivity).runOnUiThread {
             val bundleItems = viewModel.showBundleDetailInfo(nodeIndices, currentIndex)
-            bundleTrackList.adapter = BundleAdapter(bundleItems)
+            bundleTrackList.adapter = BundleAdapter(bundleItems, this)
         }
     }
 
@@ -289,4 +292,13 @@ class TrackRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickHa
         viewModel.detailViewVisible.value = true
         viewModel.detailVisibleType.value = DetailVisibleType.INFO
     }
+
+    override fun onColorInfoClick() {
+        val result = ColorHelper.sortColorsByHue(viewModel.genreColorMap)
+        colorInfoList.adapter = GenreColorAdapter(result?.map { GenreColor(it.key, Helper.getColorFromMap(it.key, result)) })
+        viewModel.detailViewVisible.value = true
+        viewModel.detailVisibleType.value = DetailVisibleType.COLORINFO
+    }
+
+
 }

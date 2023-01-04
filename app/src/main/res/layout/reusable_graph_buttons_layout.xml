@@ -101,6 +101,17 @@
             android:visibility="@{visualState == VisualState.GRAPH ? View.VISIBLE : View.GONE}">
 
             <ImageView
+                android:id="@+id/color_info"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="?attr/selectableItemBackground"
+                android:layout_marginStart="10dp"
+                android:src="@drawable/palette_black"
+                android:onClick="@{() -> graphClickHandler.onColorInfoClick()}"
+                android:tint="@color/black">
+            </ImageView>
+
+            <ImageView
                 android:id="@+id/icon_info"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
