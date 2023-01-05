@@ -381,7 +381,7 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
             .userApi
             .getLibraryState(viewModel.currentTrackUri.value!!)
             .setResultCallback { libraryState ->
-                viewModel.isSaved.value = !(/*!libraryState.isAdded && */libraryState.canAdd)
+                viewModel.isSaved.value = (libraryState.isAdded || !libraryState.canAdd)
             }
             .setErrorCallback { throwable -> logError() }
     }
