@@ -121,6 +121,9 @@ class CustomRecommendOverallFragment : Fragment(), TrackDetailClickHandler, Grap
         }
         viewModel.loadingState.observe(viewLifecycleOwner) {
             if (it == LoadingState.SUCCESS){
+                if (viewModel.linksDistance.value.isNullOrEmpty() && viewModel.nodes.value.isNullOrEmpty()){
+                    viewModel.graphLoadingState.value = LoadingState.FAILURE
+                }
                 onDataLoaded()
             } else if (it == LoadingState.LOADING){
                 skeleton.showSkeleton()

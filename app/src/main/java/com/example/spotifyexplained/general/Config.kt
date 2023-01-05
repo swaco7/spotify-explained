@@ -61,7 +61,8 @@ object Config {
     const val featuresSimilarityThreshold = 0.975
 
     // ----- Detail config ----- //
-    const val detailAllCount = 5
+    var detailAllCount = 5
+    const val detailCurrentCount = 5
     val colorArray = arrayOf("#177ADF", "#2CBA3D",  "#2CB9BA", "#2C49BA", "#752DB4", "#CC333F")
 
     // ------------------------ EXPERIMENTS -------------------------- //

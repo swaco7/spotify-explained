@@ -18,6 +18,8 @@ import com.example.spotifyexplained.services.ApiRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * ViewModel for playlist functionality
@@ -99,6 +101,7 @@ class TrackDetailPageViewModel(activity: Activity, private var trackId: String, 
         if (recommendedTrack.value == null) return
         val list = (context as MainActivity).viewModel.topTracks.value!! + (ApiRepository.getTracksAudioFeatures(listOf(recommendedTrack.value!!) , context!!)?.toMutableList() ?: mutableListOf())
         topTracksWithFeatures = list
+        Config.detailAllCount = min(Config.detailCurrentCount, max(((context as MainActivity).viewModel.topTracks.value?.size ?: 0) - 1, 0))
         minMax = Helper.getMinMaxFeatures(list)
         averageValues = Helper.getAverageFeatures(list)
         generalAverageValues = Helper.getAverageFeatures(generalSetTracksWithFeatures)

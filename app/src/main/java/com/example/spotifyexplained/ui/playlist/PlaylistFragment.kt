@@ -112,7 +112,7 @@ class PlaylistFragment : Fragment(), TrackDetailClickHandler{
                     viewModel.currentTrackUri.value = it.track.uri ?: ""
                 } else {
                     viewModel.currentTrackUri.value = it.track.uri ?: ""
-                    if (viewModel.isPremium.value!!) {
+                    if (viewModel.isPremium.value == true) {
                         playWithConnect()
                     }
                 }

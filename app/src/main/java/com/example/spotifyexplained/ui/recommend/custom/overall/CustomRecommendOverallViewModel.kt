@@ -106,6 +106,8 @@ class CustomRecommendOverallViewModel(activity: Activity, private val repository
                 if (tracks.isNotEmpty()) {
                     getMostSimilarTracksOverall(recommendedPool, usersTracksPool)
                     loadingState.value = LoadingState.SUCCESS
+                } else {
+                    loadingState.value = LoadingState.SUCCESS
                 }
             }
         }

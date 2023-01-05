@@ -130,5 +130,12 @@
             app:detailVisibleType="@{viewModel.detailVisibleType}"
             app:detailViewVisible="@{viewModel.detailViewVisible}"
             app:graphClickHandler="@{graphClickHandler}"/>
+
+        <include layout="@layout/reusable_nodata_info"
+            android:layout_below="@+id/reusable_graph_buttons_layout"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:visibility="@{viewModel.graphLoadingState == LoadingState.FAILURE ? View.VISIBLE : View.GONE}">
+        </include>
     </RelativeLayout>
 </layout>

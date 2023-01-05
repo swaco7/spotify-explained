@@ -90,6 +90,7 @@ class GenresRecommendViewModel(activity: Activity, private val repository: Track
             getRecommendedTracksArtistGenres()
             getRecommendedTracksRelatedArtists()
             saveRecommendedTracksToDatabase()
+            loadingState.value = LoadingState.SUCCESS
         }
     }
 

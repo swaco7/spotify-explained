@@ -138,11 +138,16 @@ class CustomRecommendSettingsFragment : Fragment(), TrackDetailClickHandler, Gra
         }
         viewModel.loadingState.observe(viewLifecycleOwner) {
             if (it == LoadingState.SUCCESS){
+                if (viewModel.linksDistance.value.isNullOrEmpty() && viewModel.nodes.value.isNullOrEmpty()){
+                    viewModel.graphLoadingState.value = LoadingState.FAILURE
+                }
                 onDataLoaded()
             } else if (it == LoadingState.LOADING){
                 skeleton.showSkeleton()
             } else if (it == LoadingState.RELOADED){
-                showSnackBar("Data successfully loaded")
+                if (!(viewModel.linksDistance.value.isNullOrEmpty() && viewModel.nodes.value.isNullOrEmpty())){
+                    showSnackBar("Data successfully loaded")
+                }
             }
         }
         binding.metricsButton.setOnClickListener {

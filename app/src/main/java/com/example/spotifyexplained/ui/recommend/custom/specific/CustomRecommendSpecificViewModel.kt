@@ -98,6 +98,8 @@ class CustomRecommendSpecificViewModel(activity: Activity, private val repositor
                 if (tracks.isNotEmpty()) {
                     getMostSimilarTracksSpecific(recommendedPool, usersTracksPool)
                     loadingState.value = LoadingState.SUCCESS
+                } else {
+                    loadingState.value = LoadingState.SUCCESS
                 }
             }
         }

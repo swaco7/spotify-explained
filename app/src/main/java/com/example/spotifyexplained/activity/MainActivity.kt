@@ -141,6 +141,8 @@ class MainActivity : AppCompatActivity() {
             (application as App).repository.deleteUserTracks()
             (application as App).repository.deleteFeatures()
             (application as App).repository.deleteRandomTracks()
+            viewModel.topTracks.value = mutableListOf()
+            viewModel.topArtists.value = mutableListOf()
         }
     }
 

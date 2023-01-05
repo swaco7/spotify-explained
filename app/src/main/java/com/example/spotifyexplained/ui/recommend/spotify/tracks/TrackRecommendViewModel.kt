@@ -93,6 +93,7 @@ class TrackRecommendViewModel(activity: Activity, private val repository: TrackR
             getRecommendedTracksArtistGenres()
             getRecommendedTracksRelatedArtists()
             saveRecommendedTracksToDatabase()
+            loadingState.value = LoadingState.SUCCESS
         }
     }
 

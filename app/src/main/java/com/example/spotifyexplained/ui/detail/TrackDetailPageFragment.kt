@@ -461,7 +461,8 @@ class TrackDetailPageFragment : Fragment(), TrackDetailClickHandler, AdapterView
     @SuppressLint("SetJavaScriptEnabled")
     private fun drawD3Graph(data: RadarChartData) {
         val currentRadarData = data.copy()
-        val colors = mutableListOf("#177ADF", "#2CBA3D", "#2CB9BA", "#2C49BA", "#752DB4", "#CC333F", "#FFDB58", "#FFA500")
+        val colorsAll = mutableListOf("#177ADF", "#2CBA3D", "#2CB9BA", "#2C49BA", "#752DB4", "#CC333F", "#FFDB58", "#FFA500")
+        val colors = (colorsAll.take(Config.detailAllCount + 1) + colorsAll.takeLast(2)).toMutableList()
         if (chosenIndex < Config.detailAllCount + 1) {
             val currentData = currentRadarData.tracksWithFeatures[chosenIndex]
             val currentColor = colors[chosenIndex]

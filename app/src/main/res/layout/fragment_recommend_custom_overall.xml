@@ -100,5 +100,11 @@
                 android:src="@{zoomType == ZoomType.BASIC ? @drawable/zoom_responsive_48px : @drawable/zoom_normal_48px}">
             </ImageView>
         </RelativeLayout>
+        <include layout="@layout/reusable_nodata_info"
+            android:layout_below="@+id/graph_controls_layout"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:visibility="@{viewModel.graphLoadingState == LoadingState.FAILURE ? View.VISIBLE : View.GONE}">
+        </include>
     </RelativeLayout>
 </layout>

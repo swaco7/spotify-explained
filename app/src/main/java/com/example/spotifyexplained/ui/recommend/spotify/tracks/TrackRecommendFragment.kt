@@ -131,6 +131,9 @@ class TrackRecommendFragment : Fragment(), TrackDetailClickHandler, GraphClickHa
         }
         viewModel.loadingState.observe(viewLifecycleOwner) {
             if (it == LoadingState.SUCCESS){
+                if (viewModel.links.value.isNullOrEmpty() && viewModel.nodes.value.isNullOrEmpty()){
+                    viewModel.graphLoadingState.value = LoadingState.FAILURE
+                }
                 skeleton.showOriginal()
             } else if (it == LoadingState.LOADING){
                 skeleton.showSkeleton()
