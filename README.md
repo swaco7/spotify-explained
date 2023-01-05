@@ -1,5 +1,8 @@
 # SpotifyExplained
 
+## Important info !!!
+Because of the issues with SIS not all files were uploaded. Only /app and /resources folders were uploaded, please copy rest of the files or use this repo.  
+
 ## Installation
 Requirements: Android min SDK 26 (https://developer.android.com/studio/releases/platforms)
 There is an APK file with the installation in the root directory.
