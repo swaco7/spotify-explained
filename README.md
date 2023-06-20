@@ -1,11 +1,8 @@
-# SpotifyExplained
-
-## Important info !!!
-Because of the issues with SIS not all files were uploaded. Only /app and /resources folders were uploaded, please copy rest of the files or use this repo.  
+# SpotifyExplained 
 
 ## Installation
 Requirements: Android min SDK 26 (https://developer.android.com/studio/releases/platforms)
-There is an APK file with the installation in the root directory.
+There is an APK file with the installation in the root directory [a link]([https://github.com/swaco7/spotify-explained/edit/main/spotify-explained.apk]).
 
 APK can be build directly from Android Studio => Build -> Build Bundle(s) / APK(s) -> Build APK(s), this creates an APK named app-debug.apk in app/build/intermediates/apk/debug.
 
