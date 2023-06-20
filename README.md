@@ -1,5 +1,6 @@
 # SpotifyExplained 
-
+ SpotifyExplained is an Android application supplying user-centric views on the relations in music domain.
+ 
 ## Installation
 Requirements: Android min SDK 26 (https://developer.android.com/studio/releases/platforms)
 
