@@ -2,7 +2,8 @@
 
 ## Installation
 Requirements: Android min SDK 26 (https://developer.android.com/studio/releases/platforms)
-There is an APK file with the installation in the root directory [a link](https://github.com/swaco7/spotify-explained/blob/main/spotify-explained.apk).
+
+There is an APK file with the installation in the root directory [apk](https://github.com/swaco7/spotify-explained/blob/main/spotify-explained.apk).
 
 APK can be build directly from Android Studio => Build -> Build Bundle(s) / APK(s) -> Build APK(s), this creates an APK named app-debug.apk in app/build/intermediates/apk/debug.
 
